@@ -1,0 +1,1456 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>社員登録・編集 - 社員管理システム</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="assets/common.css" rel="stylesheet">
+    <style>
+        /* レイアウト */
+        .main-container {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* ヘッダー */
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 1rem 2rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header h1 {
+            font-size: 24px;
+            font-weight: 600;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+        }
+
+        .logout-btn {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.3s;
+            font-size: 14px;
+        }
+
+        .logout-btn:hover {
+            background: rgba(255,255,255,0.3);
+        }
+
+        /* ナビゲーション */
+        .nav-container {
+            background: white;
+            border-bottom: 1px solid #e0e0e0;
+            padding: 0 2rem;
+        }
+
+        .nav-content {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .nav-tabs {
+            display: flex;
+            gap: 0;
+            list-style: none;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .nav-tabs li {
+            margin-bottom: -1px;
+        }
+
+        .nav-tabs a {
+            display: flex;
+            align-items: center;
+            padding: 15px 25px;
+            color: #666;
+            text-decoration: none;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s;
+            font-weight: 500;
+        }
+
+        .nav-tabs a:hover,
+        .nav-tabs a.active {
+            color: #667eea;
+            border-bottom-color: #667eea;
+            background: #f8f9ff;
+        }
+
+        .nav-tabs i {
+            margin-right: 8px;
+        }
+
+        /* メインコンテンツ */
+        .main-content {
+            flex: 1;
+            padding: 30px 2rem;
+            max-width: 1000px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        /* ページヘッダー */
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        .page-header h2 {
+            color: #333;
+            font-size: 32px;
+            font-weight: 700;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        /* ブレッドクラム */
+        .breadcrumb {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+            font-size: 14px;
+            color: #666;
+        }
+
+        .breadcrumb a {
+            color: #667eea;
+            text-decoration: none;
+        }
+
+        .breadcrumb a:hover {
+            text-decoration: underline;
+        }
+
+        .breadcrumb .separator {
+            margin: 0 8px;
+            color: #999;
+        }
+
+        /* フォームコンテナ */
+        .form-container {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            overflow: hidden;
+        }
+
+        .form-header {
+            background: linear-gradient(135deg, #f8f9ff 0%, #e3f2fd 100%);
+            padding: 25px 30px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .form-header h3 {
+            color: #333;
+            font-size: 24px;
+            font-weight: 600;
+            margin: 0;
+        }
+
+        .form-body {
+            padding: 40px 30px;
+        }
+
+        .form-section {
+            margin-bottom: 40px;
+        }
+
+        .form-section:last-child {
+            margin-bottom: 0;
+        }
+
+        .section-title {
+            display: flex;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 12px;
+            border-bottom: 2px solid #667eea;
+            color: #333;
+            font-size: 20px;
+            font-weight: 600;
+        }
+
+        .section-title i {
+            margin-right: 10px;
+            color: #667eea;
+        }
+
+        /* フォームグリッド */
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 25px;
+            margin-bottom: 25px;
+        }
+
+        .form-grid.single {
+            grid-template-columns: 1fr;
+        }
+
+        .form-grid.triple {
+            grid-template-columns: 1fr 1fr 1fr;
+        }
+
+        /* フォーム要素拡張 */
+        .form-group {
+            position: relative;
+        }
+
+        .form-group label {
+            display: flex;
+            align-items: center;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #555;
+            font-size: 14px;
+        }
+
+        .form-group label .required {
+            color: #dc3545;
+            margin-left: 4px;
+        }
+
+        .form-group label .optional {
+            color: #6c757d;
+            font-weight: 400;
+            font-size: 12px;
+            margin-left: 8px;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            background-color: #fafafa;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            background-color: white;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        /* バリデーション状態 */
+        .form-group.is-valid input,
+        .form-group.is-valid select,
+        .form-group.is-valid textarea {
+            border-color: #28a745;
+            background-color: #f8fff9;
+        }
+
+        .form-group.is-invalid input,
+        .form-group.is-invalid select,
+        .form-group.is-invalid textarea {
+            border-color: #dc3545;
+            background-color: #fff5f5;
+        }
+
+        .valid-feedback {
+            display: block;
+            color: #28a745;
+            font-size: 14px;
+            margin-top: 5px;
+        }
+
+        .invalid-feedback {
+            display: block;
+            color: #dc3545;
+            font-size: 14px;
+            margin-top: 5px;
+        }
+
+        /* ファイルアップロード */
+        .file-upload {
+            position: relative;
+            display: inline-block;
+            width: 100%;
+        }
+
+        .file-upload input[type="file"] {
+            position: absolute;
+            opacity: 0;
+            width: 100%;
+            height: 100%;
+            cursor: pointer;
+        }
+
+        .file-upload-label {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 40px 20px;
+            border: 2px dashed #ddd;
+            border-radius: 8px;
+            background: #fafafa;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: center;
+            color: #666;
+        }
+
+        .file-upload-label:hover {
+            border-color: #667eea;
+            background: #f8f9ff;
+            color: #667eea;
+        }
+
+        .file-upload-label i {
+            font-size: 32px;
+            margin-bottom: 10px;
+            display: block;
+        }
+
+        .file-preview {
+            margin-top: 15px;
+            padding: 15px;
+            background: #f8f9ff;
+            border-radius: 8px;
+            display: none;
+        }
+
+        .file-preview.show {
+            display: block;
+        }
+
+        .file-info {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .file-details {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .file-icon {
+            width: 40px;
+            height: 40px;
+            background: #667eea;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+        }
+
+        .file-remove {
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 6px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        /* アクションボタン */
+        .form-actions {
+            background: #f8f9ff;
+            padding: 30px;
+            border-top: 1px solid #e0e0e0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .action-group {
+            display: flex;
+            gap: 15px;
+        }
+
+        .btn-large {
+            padding: 15px 30px;
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        /* プログレスインジケーター */
+        .form-progress {
+            margin-bottom: 30px;
+        }
+
+        .progress-steps {
+            display: flex;
+            justify-content: space-between;
+            position: relative;
+            margin-bottom: 15px;
+        }
+
+        .progress-steps::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: #e0e0e0;
+            z-index: 1;
+        }
+
+        .progress-step {
+            background: white;
+            border: 3px solid #e0e0e0;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            color: #666;
+            position: relative;
+            z-index: 2;
+        }
+
+        .progress-step.active {
+            border-color: #667eea;
+            color: #667eea;
+        }
+
+        .progress-step.completed {
+            border-color: #28a745;
+            background: #28a745;
+            color: white;
+        }
+
+        .step-label {
+            text-align: center;
+            font-size: 12px;
+            color: #666;
+            margin-top: 8px;
+        }
+
+        .step-label.active {
+            color: #667eea;
+            font-weight: 600;
+        }
+
+        /* 確認画面スタイル */
+        .confirmation-section {
+            background: #f8f9ff;
+            border-radius: 8px;
+            padding: 25px;
+            margin-bottom: 30px;
+        }
+
+        .confirmation-title {
+            color: #667eea;
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+        }
+
+        .confirmation-title i {
+            margin-right: 10px;
+        }
+
+        .confirmation-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .confirmation-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .confirmation-label {
+            font-weight: 600;
+            color: #666;
+        }
+
+        .confirmation-value {
+            color: #333;
+        }
+
+        /* レスポンシブ対応 */
+        @media (max-width: 768px) {
+            .header-content {
+                flex-direction: column;
+                gap: 15px;
+                text-align: center;
+            }
+
+            .main-content {
+                padding: 20px 15px;
+                max-width: none;
+            }
+
+            .nav-container {
+                padding: 0 15px;
+            }
+
+            .nav-tabs {
+                overflow-x: auto;
+                white-space: nowrap;
+                -webkit-overflow-scrolling: touch;
+            }
+
+            .page-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 15px;
+            }
+
+            .page-header h2 {
+                font-size: 28px;
+            }
+
+            .form-grid {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+
+            .form-grid.triple {
+                grid-template-columns: 1fr;
+            }
+
+            .form-body {
+                padding: 30px 20px;
+            }
+
+            .form-actions {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .action-group {
+                justify-content: center;
+            }
+
+            .btn {
+                width: 100%;
+            }
+
+            .confirmation-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .progress-steps {
+                flex-direction: column;
+                align-items: center;
+                gap: 15px;
+            }
+
+            .progress-steps::before {
+                display: none;
+            }
+
+            .step-label {
+                margin-top: 5px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .header {
+                padding: 1rem 15px;
+            }
+
+            .form-header {
+                padding: 20px 15px;
+            }
+
+            .form-body {
+                padding: 25px 15px;
+            }
+
+            .form-actions {
+                padding: 20px 15px;
+            }
+
+            .section-title {
+                font-size: 18px;
+            }
+
+            .file-upload-label {
+                padding: 30px 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="main-container">
+        <!-- ヘッダー -->
+        <header class="header">
+            <div class="header-content">
+                <h1><i class="fas fa-user-plus"></i> 社員管理システム</h1>
+                <div class="user-info">
+                    <div class="user-avatar">
+                        <i class="fas fa-user"></i>
+                    </div>
+                    <div>
+                        <div style="font-weight: 600;">管理者</div>
+                        <div style="font-size: 12px; opacity: 0.8;">admin@company.com</div>
+                    </div>
+                    <button class="logout-btn" onclick="logout()">
+                        <i class="fas fa-sign-out-alt"></i> ログアウト
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- ナビゲーション -->
+        <nav class="nav-container">
+            <div class="nav-content">
+                <ul class="nav-tabs">
+                    <li><a href="02_dashboard.html">
+                        <i class="fas fa-tachometer-alt"></i> ダッシュボード
+                    </a></li>
+                    <li><a href="03_employee_list.html">
+                        <i class="fas fa-users"></i> 社員一覧
+                    </a></li>
+                    <li><a href="04_employee_form.html" class="active">
+                        <i class="fas fa-user-plus"></i> 社員登録
+                    </a></li>
+                    <li><a href="05_csv_import_export.html">
+                        <i class="fas fa-file-csv"></i> CSV入出力
+                    </a></li>
+                </ul>
+            </div>
+        </nav>
+
+        <!-- メインコンテンツ -->
+        <main class="main-content">
+            <!-- ブレッドクラム -->
+            <div class="breadcrumb">
+                <a href="02_dashboard.html">ホーム</a>
+                <span class="separator">></span>
+                <a href="03_employee_list.html">社員一覧</a>
+                <span class="separator">></span>
+                <span id="breadcrumbCurrent">社員登録</span>
+            </div>
+
+            <!-- ページヘッダー -->
+            <div class="page-header">
+                <h2 id="pageTitle">社員登録</h2>
+                <div class="header-actions">
+                    <button class="btn btn-secondary" onclick="goBack()">
+                        <i class="fas fa-arrow-left"></i> 戻る
+                    </button>
+                </div>
+            </div>
+
+            <!-- プログレス -->
+            <div class="form-progress">
+                <div class="progress-steps">
+                    <div class="progress-step active" id="step1">1</div>
+                    <div class="progress-step" id="step2">2</div>
+                    <div class="progress-step" id="step3">3</div>
+                </div>
+                <div style="display: flex; justify-content: space-between;">
+                    <div class="step-label active">基本情報</div>
+                    <div class="step-label">詳細情報</div>
+                    <div class="step-label">確認</div>
+                </div>
+            </div>
+
+            <!-- フォーム -->
+            <div class="form-container">
+                <div class="form-header">
+                    <h3 id="formTitle">
+                        <i class="fas fa-user-plus"></i> 新規社員登録
+                    </h3>
+                </div>
+
+                <form id="employeeForm" novalidate>
+                    <div class="form-body">
+                        <!-- ステップ1: 基本情報 -->
+                        <div class="form-step active" id="formStep1">
+                            <div class="form-section">
+                                <h4 class="section-title">
+                                    <i class="fas fa-user"></i> 基本情報
+                                </h4>
+                                
+                                <div class="form-grid">
+                                    <div class="form-group">
+                                        <label>姓 <span class="required">*</span></label>
+                                        <input type="text" name="lastName" id="lastName" placeholder="田中" required>
+                                        <div class="invalid-feedback"></div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>名 <span class="required">*</span></label>
+                                        <input type="text" name="firstName" id="firstName" placeholder="太郎" required>
+                                        <div class="invalid-feedback"></div>
+                                    </div>
+                                </div>
+
+                                <div class="form-grid">
+                                    <div class="form-group">
+                                        <label>姓（カナ） <span class="required">*</span></label>
+                                        <input type="text" name="lastNameKana" id="lastNameKana" placeholder="タナカ" required>
+                                        <div class="invalid-feedback"></div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>名（カナ） <span class="required">*</span></label>
+                                        <input type="text" name="firstNameKana" id="firstNameKana" placeholder="タロウ" required>
+                                        <div class="invalid-feedback"></div>
+                                    </div>
+                                </div>
+
+                                <div class="form-grid">
+                                    <div class="form-group">
+                                        <label>生年月日 <span class="required">*</span></label>
+                                        <input type="date" name="birthDate" id="birthDate" required>
+                                        <div class="invalid-feedback"></div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>性別 <span class="required">*</span></label>
+                                        <select name="gender" id="gender" required>
+                                            <option value="">選択してください</option>
+                                            <option value="male">男性</option>
+                                            <option value="female">女性</option>
+                                            <option value="other">その他</option>
+                                        </select>
+                                        <div class="invalid-feedback"></div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="form-section">
+                                <h4 class="section-title">
+                                    <i class="fas fa-envelope"></i> 連絡先情報
+                                </h4>
+                                
+                                <div class="form-grid">
+                                    <div class="form-group">
+                                        <label>メールアドレス <span class="required">*</span></label>
+                                        <input type="email" name="email" id="email" placeholder="tanaka@company.com" required>
+                                        <div class="invalid-feedback"></div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>電話番号 <span class="optional">(任意)</span></label>
+                                        <input type="tel" name="phone" id="phone" placeholder="03-1234-5678">
+                                        <div class="invalid-feedback"></div>
+                                    </div>
+                                </div>
+
+                                <div class="form-grid single">
+                                    <div class="form-group">
+                                        <label>住所 <span class="optional">(任意)</span></label>
+                                        <input type="text" name="address" id="address" placeholder="東京都渋谷区...">
+                                        <div class="invalid-feedback"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- ステップ2: 詳細情報 -->
+                        <div class="form-step" id="formStep2">
+                            <div class="form-section">
+                                <h4 class="section-title">
+                                    <i class="fas fa-building"></i> 勤務情報
+                                </h4>
+                                
+                                <div class="form-grid">
+                                    <div class="form-group">
+                                        <label>社員ID <span class="required">*</span></label>
+                                        <input type="text" name="employeeId" id="employeeId" placeholder="EMP001" required>
+                                        <div class="invalid-feedback"></div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>入社日 <span class="required">*</span></label>
+                                        <input type="date" name="joinDate" id="joinDate" required>
+                                        <div class="invalid-feedback"></div>
+                                    </div>
+                                </div>
+
+                                <div class="form-grid">
+                                    <div class="form-group">
+                                        <label>部署 <span class="required">*</span></label>
+                                        <select name="department" id="department" required>
+                                            <option value="">選択してください</option>
+                                            <option value="開発部">開発部</option>
+                                            <option value="営業部">営業部</option>
+                                            <option value="総務部">総務部</option>
+                                            <option value="人事部">人事部</option>
+                                            <option value="経理部">経理部</option>
+                                        </select>
+                                        <div class="invalid-feedback"></div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>役職 <span class="required">*</span></label>
+                                        <select name="position" id="position" required>
+                                            <option value="">選択してください</option>
+                                            <option value="部長">部長</option>
+                                            <option value="課長">課長</option>
+                                            <option value="係長">係長</option>
+                                            <option value="主任">主任</option>
+                                            <option value="一般">一般</option>
+                                        </select>
+                                        <div class="invalid-feedback"></div>
+                                    </div>
+                                </div>
+
+                                <div class="form-grid">
+                                    <div class="form-group">
+                                        <label>雇用形態 <span class="required">*</span></label>
+                                        <select name="employmentType" id="employmentType" required>
+                                            <option value="">選択してください</option>
+                                            <option value="正社員">正社員</option>
+                                            <option value="契約社員">契約社員</option>
+                                            <option value="パート">パート</option>
+                                            <option value="派遣">派遣</option>
+                                        </select>
+                                        <div class="invalid-feedback"></div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>ステータス <span class="required">*</span></label>
+                                        <select name="status" id="status" required>
+                                            <option value="">選択してください</option>
+                                            <option value="active" selected>在籍</option>
+                                            <option value="inactive">退職</option>
+                                            <option value="pending">保留中</option>
+                                        </select>
+                                        <div class="invalid-feedback"></div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="form-section">
+                                <h4 class="section-title">
+                                    <i class="fas fa-sticky-note"></i> 追加情報
+                                </h4>
+                                
+                                <div class="form-grid single">
+                                    <div class="form-group">
+                                        <label>備考 <span class="optional">(任意)</span></label>
+                                        <textarea name="notes" id="notes" placeholder="特記事項があれば入力してください"></textarea>
+                                        <div class="invalid-feedback"></div>
+                                    </div>
+                                </div>
+
+                                <div class="form-grid single">
+                                    <div class="form-group">
+                                        <label>プロフィール画像 <span class="optional">(任意)</span></label>
+                                        <div class="file-upload">
+                                            <input type="file" name="profileImage" id="profileImage" accept="image/*">
+                                            <div class="file-upload-label">
+                                                <div>
+                                                    <i class="fas fa-cloud-upload-alt"></i>
+                                                    <div>画像ファイルを選択またはドラッグ＆ドロップ</div>
+                                                    <small>JPG, PNG, GIF (最大5MB)</small>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="file-preview" id="filePreview">
+                                            <div class="file-info">
+                                                <div class="file-details">
+                                                    <div class="file-icon">
+                                                        <i class="fas fa-file-image"></i>
+                                                    </div>
+                                                    <div>
+                                                        <div id="fileName">profile.jpg</div>
+                                                        <small id="fileSize">2.3 MB</small>
+                                                    </div>
+                                                </div>
+                                                <button type="button" class="file-remove" onclick="removeFile()">
+                                                    <i class="fas fa-times"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+                                        <div class="invalid-feedback"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- ステップ3: 確認 -->
+                        <div class="form-step" id="formStep3">
+                            <div class="confirmation-section">
+                                <h4 class="confirmation-title">
+                                    <i class="fas fa-check-circle"></i> 入力内容の確認
+                                </h4>
+                                <p style="margin-bottom: 20px; color: #666;">以下の内容で登録します。間違いがないかご確認ください。</p>
+                                
+                                <div class="confirmation-grid">
+                                    <div>
+                                        <div class="confirmation-item">
+                                            <div class="confirmation-label">氏名</div>
+                                            <div class="confirmation-value" id="confirmName">-</div>
+                                        </div>
+                                        <div class="confirmation-item">
+                                            <div class="confirmation-label">氏名（カナ）</div>
+                                            <div class="confirmation-value" id="confirmNameKana">-</div>
+                                        </div>
+                                        <div class="confirmation-item">
+                                            <div class="confirmation-label">生年月日</div>
+                                            <div class="confirmation-value" id="confirmBirthDate">-</div>
+                                        </div>
+                                        <div class="confirmation-item">
+                                            <div class="confirmation-label">性別</div>
+                                            <div class="confirmation-value" id="confirmGender">-</div>
+                                        </div>
+                                        <div class="confirmation-item">
+                                            <div class="confirmation-label">メールアドレス</div>
+                                            <div class="confirmation-value" id="confirmEmail">-</div>
+                                        </div>
+                                        <div class="confirmation-item">
+                                            <div class="confirmation-label">電話番号</div>
+                                            <div class="confirmation-value" id="confirmPhone">-</div>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <div class="confirmation-item">
+                                            <div class="confirmation-label">社員ID</div>
+                                            <div class="confirmation-value" id="confirmEmployeeId">-</div>
+                                        </div>
+                                        <div class="confirmation-item">
+                                            <div class="confirmation-label">部署</div>
+                                            <div class="confirmation-value" id="confirmDepartment">-</div>
+                                        </div>
+                                        <div class="confirmation-item">
+                                            <div class="confirmation-label">役職</div>
+                                            <div class="confirmation-value" id="confirmPosition">-</div>
+                                        </div>
+                                        <div class="confirmation-item">
+                                            <div class="confirmation-label">入社日</div>
+                                            <div class="confirmation-value" id="confirmJoinDate">-</div>
+                                        </div>
+                                        <div class="confirmation-item">
+                                            <div class="confirmation-label">雇用形態</div>
+                                            <div class="confirmation-value" id="confirmEmploymentType">-</div>
+                                        </div>
+                                        <div class="confirmation-item">
+                                            <div class="confirmation-label">ステータス</div>
+                                            <div class="confirmation-value" id="confirmStatus">-</div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div style="margin-top: 20px;">
+                                    <div class="confirmation-item">
+                                        <div class="confirmation-label">住所</div>
+                                        <div class="confirmation-value" id="confirmAddress">-</div>
+                                    </div>
+                                    <div class="confirmation-item">
+                                        <div class="confirmation-label">備考</div>
+                                        <div class="confirmation-value" id="confirmNotes">-</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-actions">
+                        <div class="action-group">
+                            <button type="button" class="btn btn-secondary btn-large" id="prevBtn" onclick="previousStep()" style="display: none;">
+                                <i class="fas fa-arrow-left"></i> 前へ
+                            </button>
+                        </div>
+
+                        <div class="action-group">
+                            <button type="button" class="btn btn-secondary btn-large" onclick="resetForm()">
+                                <i class="fas fa-undo"></i> リセット
+                            </button>
+                            <button type="button" class="btn btn-primary btn-large" id="nextBtn" onclick="nextStep()">
+                                次へ <i class="fas fa-arrow-right"></i>
+                            </button>
+                            <button type="submit" class="btn btn-success btn-large" id="submitBtn" style="display: none;">
+                                <i class="fas fa-save"></i> 登録
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </main>
+    </div>
+
+    <!-- アラート用コンテナ -->
+    <div id="alert-container"></div>
+
+    <script src="assets/common.js"></script>
+    <script>
+        // 現在のステップ
+        let currentStep = 1;
+        const totalSteps = 3;
+        let isEditMode = false;
+        let editEmployeeId = '';
+
+        // ページ初期化
+        document.addEventListener('DOMContentLoaded', function() {
+            // URLパラメータをチェック（編集モード）
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.has('id')) {
+                isEditMode = true;
+                editEmployeeId = urlParams.get('id');
+                initEditMode();
+            }
+
+            // イベントリスナーを設定
+            setupEventListeners();
+            
+            // バリデーション設定
+            setupValidation();
+
+            // 入社日のデフォルト値を今日に設定
+            document.getElementById('joinDate').value = new Date().toISOString().split('T')[0];
+        });
+
+        // 編集モード初期化
+        function initEditMode() {
+            document.getElementById('pageTitle').innerHTML = '<i class="fas fa-edit"></i> 社員編集';
+            document.getElementById('formTitle').innerHTML = '<i class="fas fa-edit"></i> 社員情報編集';
+            document.getElementById('breadcrumbCurrent').textContent = '社員編集';
+            
+            // 既存データを読み込み（デモ用）
+            loadEmployeeData(editEmployeeId);
+        }
+
+        // 既存社員データ読み込み（デモ用）
+        function loadEmployeeData(empId) {
+            // 実際の実装ではAPIからデータを取得
+            const sampleData = {
+                lastName: '田中',
+                firstName: '太郎',
+                lastNameKana: 'タナカ',
+                firstNameKana: 'タロウ',
+                birthDate: '1990-05-15',
+                gender: 'male',
+                email: 'tanaka@company.com',
+                phone: '03-1234-5678',
+                address: '東京都渋谷区神南1-1-1',
+                employeeId: empId,
+                joinDate: '2022-04-01',
+                department: '開発部',
+                position: '主任',
+                employmentType: '正社員',
+                status: 'active',
+                notes: '開発チームリーダー'
+            };
+
+            // フォームにデータを設定
+            Object.keys(sampleData).forEach(key => {
+                const element = document.getElementById(key);
+                if (element) {
+                    element.value = sampleData[key];
+                }
+            });
+
+            EmployeeSystem.showAlert('社員データを読み込みました', 'info', 3000);
+        }
+
+        // イベントリスナー設定
+        function setupEventListeners() {
+            // フォーム送信
+            document.getElementById('employeeForm').addEventListener('submit', handleSubmit);
+
+            // ファイルアップロード
+            document.getElementById('profileImage').addEventListener('change', handleFileUpload);
+
+            // リアルタイムバリデーション
+            const inputs = document.querySelectorAll('input, select, textarea');
+            inputs.forEach(input => {
+                input.addEventListener('blur', () => validateField(input));
+                input.addEventListener('input', () => clearFieldError(input));
+            });
+
+            // カナ自動変換（簡易版）
+            document.getElementById('lastName').addEventListener('input', function() {
+                autoKanaConvert(this.value, 'lastNameKana');
+            });
+            document.getElementById('firstName').addEventListener('input', function() {
+                autoKanaConvert(this.value, 'firstNameKana');
+            });
+        }
+
+        // バリデーション設定
+        function setupValidation() {
+            // メールアドレスの重複チェック（デモ用）
+            document.getElementById('email').addEventListener('blur', checkEmailDuplicate);
+            
+            // 社員IDの重複チェック（デモ用）
+            document.getElementById('employeeId').addEventListener('blur', checkEmployeeIdDuplicate);
+        }
+
+        // ログアウト処理
+        function logout() {
+            if (confirm('ログアウトしますか？')) {
+                EmployeeSystem.removeStorageData('employee_system_user');
+                window.location.href = '01_login.html';
+            }
+        }
+
+        // 戻る
+        function goBack() {
+            if (confirm('入力内容が破棄されます。戻りますか？')) {
+                window.location.href = '03_employee_list.html';
+            }
+        }
+
+        // 次のステップへ
+        function nextStep() {
+            if (currentStep < totalSteps) {
+                if (validateCurrentStep()) {
+                    currentStep++;
+                    showStep(currentStep);
+                }
+            }
+        }
+
+        // 前のステップへ
+        function previousStep() {
+            if (currentStep > 1) {
+                currentStep--;
+                showStep(currentStep);
+            }
+        }
+
+        // ステップ表示
+        function showStep(step) {
+            // フォームステップの表示切替
+            document.querySelectorAll('.form-step').forEach((element, index) => {
+                element.classList.toggle('active', index === step - 1);
+                element.style.display = index === step - 1 ? 'block' : 'none';
+            });
+
+            // プログレスステップの更新
+            document.querySelectorAll('.progress-step').forEach((element, index) => {
+                element.classList.remove('active', 'completed');
+                if (index < step - 1) {
+                    element.classList.add('completed');
+                    element.innerHTML = '<i class="fas fa-check"></i>';
+                } else if (index === step - 1) {
+                    element.classList.add('active');
+                    element.textContent = index + 1;
+                } else {
+                    element.textContent = index + 1;
+                }
+            });
+
+            // ラベルの更新
+            document.querySelectorAll('.step-label').forEach((element, index) => {
+                element.classList.toggle('active', index === step - 1);
+            });
+
+            // ボタンの表示制御
+            document.getElementById('prevBtn').style.display = step > 1 ? 'block' : 'none';
+            document.getElementById('nextBtn').style.display = step < totalSteps ? 'block' : 'none';
+            document.getElementById('submitBtn').style.display = step === totalSteps ? 'block' : 'none';
+
+            // 確認ステップの場合、データを表示
+            if (step === 3) {
+                populateConfirmation();
+            }
+        }
+
+        // 現在のステップのバリデーション
+        function validateCurrentStep() {
+            let isValid = true;
+            const currentStepElement = document.getElementById(`formStep${currentStep}`);
+            const inputs = currentStepElement.querySelectorAll('input[required], select[required], textarea[required]');
+
+            inputs.forEach(input => {
+                if (!validateField(input)) {
+                    isValid = false;
+                }
+            });
+
+            if (!isValid) {
+                EmployeeSystem.showAlert('必須項目を入力してください', 'danger', 3000);
+            }
+
+            return isValid;
+        }
+
+        // フィールドバリデーション
+        function validateField(field) {
+            const value = field.value.trim();
+            const fieldName = field.name;
+            let isValid = true;
+            let errorMessage = '';
+
+            // 必須チェック
+            if (field.required && !value) {
+                isValid = false;
+                errorMessage = '必須項目です';
+            }
+            // メールアドレスチェック
+            else if (fieldName === 'email' && value && !EmployeeSystem.validateEmail(value)) {
+                isValid = false;
+                errorMessage = '正しいメールアドレス形式で入力してください';
+            }
+            // 電話番号チェック
+            else if (fieldName === 'phone' && value && !EmployeeSystem.validatePhoneNumber(value)) {
+                isValid = false;
+                errorMessage = '正しい電話番号形式で入力してください';
+            }
+            // 生年月日チェック
+            else if (fieldName === 'birthDate' && value) {
+                const birthDate = new Date(value);
+                const today = new Date();
+                const age = today.getFullYear() - birthDate.getFullYear();
+                if (age < 16 || age > 80) {
+                    isValid = false;
+                    errorMessage = '16歳以上80歳以下で入力してください';
+                }
+            }
+            // 入社日チェック
+            else if (fieldName === 'joinDate' && value) {
+                const joinDate = new Date(value);
+                const today = new Date();
+                if (joinDate > today) {
+                    isValid = false;
+                    errorMessage = '未来の日付は入力できません';
+                }
+            }
+
+            // エラー表示の更新
+            const formGroup = field.closest('.form-group');
+            const errorElement = formGroup.querySelector('.invalid-feedback');
+            
+            if (isValid) {
+                formGroup.classList.remove('is-invalid');
+                formGroup.classList.add('is-valid');
+                errorElement.textContent = '';
+            } else {
+                formGroup.classList.remove('is-valid');
+                formGroup.classList.add('is-invalid');
+                errorElement.textContent = errorMessage;
+            }
+
+            return isValid;
+        }
+
+        // フィールドエラーのクリア
+        function clearFieldError(field) {
+            const formGroup = field.closest('.form-group');
+            formGroup.classList.remove('is-invalid');
+            const errorElement = formGroup.querySelector('.invalid-feedback');
+            errorElement.textContent = '';
+        }
+
+        // メールアドレス重複チェック（デモ用）
+        function checkEmailDuplicate() {
+            const email = document.getElementById('email').value;
+            if (!email) return;
+
+            // 実際の実装ではAPIで重複チェック
+            const existingEmails = ['existing@company.com', 'test@company.com'];
+            
+            if (existingEmails.includes(email) && (!isEditMode || email !== 'tanaka@company.com')) {
+                const formGroup = document.getElementById('email').closest('.form-group');
+                const errorElement = formGroup.querySelector('.invalid-feedback');
+                
+                formGroup.classList.add('is-invalid');
+                errorElement.textContent = 'このメールアドレスは既に使用されています';
+                
+                return false;
+            }
+            
+            return true;
+        }
+
+        // 社員ID重複チェック（デモ用）
+        function checkEmployeeIdDuplicate() {
+            const empId = document.getElementById('employeeId').value;
+            if (!empId) return;
+
+            // 実際の実装ではAPIで重複チェック
+            const existingIds = ['EMP999', 'EMP888'];
+            
+            if (existingIds.includes(empId) && (!isEditMode || empId !== editEmployeeId)) {
+                const formGroup = document.getElementById('employeeId').closest('.form-group');
+                const errorElement = formGroup.querySelector('.invalid-feedback');
+                
+                formGroup.classList.add('is-invalid');
+                errorElement.textContent = 'この社員IDは既に使用されています';
+                
+                return false;
+            }
+            
+            return true;
+        }
+
+        // カナ自動変換（簡易版）
+        function autoKanaConvert(input, targetId) {
+            // 実際の実装では適切なカナ変換ライブラリを使用
+            const kanaMap = {
+                'たなか': 'タナカ', 'たろう': 'タロウ', 'はなこ': 'ハナコ',
+                'さとう': 'サトウ', 'すずき': 'スズキ', 'たかはし': 'タカハシ'
+            };
+            
+            const kana = kanaMap[input.toLowerCase()] || '';
+            if (kana) {
+                document.getElementById(targetId).value = kana;
+            }
+        }
+
+        // ファイルアップロード処理
+        function handleFileUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            // ファイルサイズチェック（5MB）
+            if (file.size > 5 * 1024 * 1024) {
+                EmployeeSystem.showAlert('ファイルサイズが5MBを超えています', 'danger', 3000);
+                event.target.value = '';
+                return;
+            }
+
+            // ファイル形式チェック
+            const allowedTypes = ['image/jpeg', 'image/png', 'image/gif'];
+            if (!allowedTypes.includes(file.type)) {
+                EmployeeSystem.showAlert('JPG、PNG、GIF形式のファイルを選択してください', 'danger', 3000);
+                event.target.value = '';
+                return;
+            }
+
+            // プレビュー表示
+            document.getElementById('fileName').textContent = file.name;
+            document.getElementById('fileSize').textContent = (file.size / 1024 / 1024).toFixed(1) + ' MB';
+            document.getElementById('filePreview').classList.add('show');
+        }
+
+        // ファイル削除
+        function removeFile() {
+            document.getElementById('profileImage').value = '';
+            document.getElementById('filePreview').classList.remove('show');
+        }
+
+        // 確認画面にデータを表示
+        function populateConfirmation() {
+            const formData = new FormData(document.getElementById('employeeForm'));
+            
+            // 性別の表示名変換
+            const genderMap = { 'male': '男性', 'female': '女性', 'other': 'その他' };
+            
+            // ステータスの表示名変換
+            const statusMap = { 'active': '在籍', 'inactive': '退職', 'pending': '保留中' };
+
+            document.getElementById('confirmName').textContent = 
+                `${formData.get('lastName')} ${formData.get('firstName')}` || '-';
+            document.getElementById('confirmNameKana').textContent = 
+                `${formData.get('lastNameKana')} ${formData.get('firstNameKana')}` || '-';
+            document.getElementById('confirmBirthDate').textContent = formData.get('birthDate') || '-';
+            document.getElementById('confirmGender').textContent = genderMap[formData.get('gender')] || '-';
+            document.getElementById('confirmEmail').textContent = formData.get('email') || '-';
+            document.getElementById('confirmPhone').textContent = formData.get('phone') || '-';
+            document.getElementById('confirmEmployeeId').textContent = formData.get('employeeId') || '-';
+            document.getElementById('confirmDepartment').textContent = formData.get('department') || '-';
+            document.getElementById('confirmPosition').textContent = formData.get('position') || '-';
+            document.getElementById('confirmJoinDate').textContent = formData.get('joinDate') || '-';
+            document.getElementById('confirmEmploymentType').textContent = formData.get('employmentType') || '-';
+            document.getElementById('confirmStatus').textContent = statusMap[formData.get('status')] || '-';
+            document.getElementById('confirmAddress').textContent = formData.get('address') || '-';
+            document.getElementById('confirmNotes').textContent = formData.get('notes') || '-';
+        }
+
+        // フォーム送信処理
+        function handleSubmit(event) {
+            event.preventDefault();
+
+            if (!validateCurrentStep()) {
+                return;
+            }
+
+            const formData = new FormData(event.target);
+            const submitBtn = document.getElementById('submitBtn');
+            
+            // ローディング状態にする
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<div class="loading"></div> 処理中...';
+
+            // APIに送信（デモ用の遅延）
+            setTimeout(() => {
+                const action = isEditMode ? '更新' : '登録';
+                const empName = `${formData.get('lastName')} ${formData.get('firstName')}`;
+                
+                EmployeeSystem.showAlert(`${empName}さんを${action}しました`, 'success', 3000);
+                
+                // 一覧画面に戻る
+                setTimeout(() => {
+                    window.location.href = '03_employee_list.html';
+                }, 2000);
+                
+            }, 2000);
+        }
+
+        // フォームリセット
+        function resetForm() {
+            if (confirm('入力内容をリセットしますか？')) {
+                document.getElementById('employeeForm').reset();
+                
+                // バリデーション状態をクリア
+                document.querySelectorAll('.form-group').forEach(group => {
+                    group.classList.remove('is-valid', 'is-invalid');
+                });
+                
+                // ファイルプレビューをクリア
+                document.getElementById('filePreview').classList.remove('show');
+                
+                // ステップ1に戻る
+                currentStep = 1;
+                showStep(currentStep);
+                
+                EmployeeSystem.showAlert('フォームをリセットしました', 'info', 2000);
+            }
+        }
+
+        // 初期ステップ表示
+        showStep(currentStep);
+    </script>
+</body>
+</html>

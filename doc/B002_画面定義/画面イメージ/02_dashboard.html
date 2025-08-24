@@ -1,0 +1,924 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ダッシュボード - 社員管理システム</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="assets/common.css" rel="stylesheet">
+    <style>
+        /* レイアウト */
+        .main-container {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* ヘッダー */
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 1rem 2rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header h1 {
+            font-size: 24px;
+            font-weight: 600;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+        }
+
+        .logout-btn {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.3s;
+            font-size: 14px;
+        }
+
+        .logout-btn:hover {
+            background: rgba(255,255,255,0.3);
+        }
+
+        /* ナビゲーション */
+        .nav-container {
+            background: white;
+            border-bottom: 1px solid #e0e0e0;
+            padding: 0 2rem;
+        }
+
+        .nav-content {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .nav-tabs {
+            display: flex;
+            gap: 0;
+            list-style: none;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .nav-tabs li {
+            margin-bottom: -1px;
+        }
+
+        .nav-tabs a {
+            display: flex;
+            align-items: center;
+            padding: 15px 25px;
+            color: #666;
+            text-decoration: none;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s;
+            font-weight: 500;
+        }
+
+        .nav-tabs a:hover,
+        .nav-tabs a.active {
+            color: #667eea;
+            border-bottom-color: #667eea;
+            background: #f8f9ff;
+        }
+
+        .nav-tabs i {
+            margin-right: 8px;
+        }
+
+        /* メインコンテンツ */
+        .main-content {
+            flex: 1;
+            padding: 30px 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        /* ダッシュボードグリッド */
+        .dashboard-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        .dashboard-header h2 {
+            color: #333;
+            font-size: 32px;
+            font-weight: 700;
+        }
+
+        .last-updated {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 25px;
+            margin-bottom: 40px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            border-left: 4px solid #667eea;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 30px rgba(0,0,0,0.12);
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 100px;
+            height: 100px;
+            background: linear-gradient(45deg, transparent, rgba(102, 126, 234, 0.1));
+            border-radius: 50%;
+            transform: translate(30px, -30px);
+        }
+
+        .stat-card-content {
+            position: relative;
+            z-index: 1;
+        }
+
+        .stat-card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 15px;
+        }
+
+        .stat-card-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 24px;
+        }
+
+        .stat-card-trend {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 12px;
+            font-weight: 600;
+            padding: 4px 8px;
+            border-radius: 20px;
+        }
+
+        .trend-up {
+            background: #e8f5e8;
+            color: #2e7d32;
+        }
+
+        .trend-down {
+            background: #ffebee;
+            color: #c62828;
+        }
+
+        .stat-card-value {
+            font-size: 36px;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 5px;
+            line-height: 1;
+        }
+
+        .stat-card-label {
+            color: #666;
+            font-size: 16px;
+            font-weight: 500;
+        }
+
+        /* チャートセクション */
+        .charts-section {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+
+        .chart-card {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        }
+
+        .chart-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .chart-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .chart-period {
+            display: flex;
+            gap: 10px;
+        }
+
+        .chart-period button {
+            padding: 6px 12px;
+            border: 1px solid #ddd;
+            background: white;
+            border-radius: 5px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .chart-period button.active {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 300px;
+            display: flex;
+            align-items: end;
+            justify-content: space-around;
+            padding: 20px 0;
+        }
+
+        .bar {
+            background: linear-gradient(to top, #667eea, #764ba2);
+            border-radius: 4px 4px 0 0;
+            min-width: 40px;
+            margin: 0 5px;
+            position: relative;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .bar:hover {
+            opacity: 0.8;
+            transform: scale(1.05);
+        }
+
+        .bar-label {
+            position: absolute;
+            bottom: -25px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 12px;
+            color: #666;
+            white-space: nowrap;
+        }
+
+        .bar-value {
+            position: absolute;
+            top: -20px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 12px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        /* 最近のアクティビティ */
+        .activity-card {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        }
+
+        .activity-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .activity-list {
+            list-style: none;
+        }
+
+        .activity-item {
+            display: flex;
+            align-items: center;
+            padding: 15px 0;
+            border-bottom: 1px solid #f5f5f5;
+        }
+
+        .activity-item:last-child {
+            border-bottom: none;
+        }
+
+        .activity-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 15px;
+            font-size: 16px;
+            color: white;
+        }
+
+        .activity-icon.new { background: #4caf50; }
+        .activity-icon.update { background: #2196f3; }
+        .activity-icon.delete { background: #f44336; }
+
+        .activity-content {
+            flex: 1;
+        }
+
+        .activity-title {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 2px;
+        }
+
+        .activity-description {
+            font-size: 14px;
+            color: #666;
+        }
+
+        .activity-time {
+            font-size: 12px;
+            color: #999;
+        }
+
+        /* 部署別統計 */
+        .department-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+        }
+
+        .dept-item {
+            text-align: center;
+            padding: 20px;
+            background: #f8f9ff;
+            border-radius: 8px;
+            transition: all 0.3s;
+        }
+
+        .dept-item:hover {
+            background: #e3f2fd;
+            transform: translateY(-2px);
+        }
+
+        .dept-count {
+            font-size: 24px;
+            font-weight: 700;
+            color: #667eea;
+            margin-bottom: 5px;
+        }
+
+        .dept-name {
+            font-size: 14px;
+            color: #666;
+        }
+
+        /* レスポンシブ対応 */
+        @media (max-width: 1024px) {
+            .charts-section {
+                grid-template-columns: 1fr;
+            }
+
+            .stats-grid {
+                grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            }
+        }
+
+        @media (max-width: 768px) {
+            .header-content {
+                flex-direction: column;
+                gap: 15px;
+                text-align: center;
+            }
+
+            .main-content {
+                padding: 20px 15px;
+            }
+
+            .nav-container {
+                padding: 0 15px;
+            }
+
+            .nav-tabs {
+                overflow-x: auto;
+                white-space: nowrap;
+                -webkit-overflow-scrolling: touch;
+            }
+
+            .nav-tabs a {
+                padding: 12px 20px;
+                font-size: 14px;
+            }
+
+            .dashboard-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+            }
+
+            .dashboard-header h2 {
+                font-size: 28px;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+
+            .stat-card {
+                padding: 25px;
+            }
+
+            .chart-period {
+                flex-wrap: wrap;
+            }
+
+            .department-stats {
+                grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            }
+        }
+
+        @media (max-width: 480px) {
+            .header {
+                padding: 1rem 15px;
+            }
+
+            .stat-card-value {
+                font-size: 28px;
+            }
+
+            .chart-container {
+                height: 250px;
+            }
+
+            .bar {
+                min-width: 30px;
+                margin: 0 3px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="main-container">
+        <!-- ヘッダー -->
+        <header class="header">
+            <div class="header-content">
+                <h1><i class="fas fa-tachometer-alt"></i> 社員管理システム</h1>
+                <div class="user-info">
+                    <div class="user-avatar">
+                        <i class="fas fa-user"></i>
+                    </div>
+                    <div>
+                        <div style="font-weight: 600;">管理者</div>
+                        <div style="font-size: 12px; opacity: 0.8;">admin@company.com</div>
+                    </div>
+                    <button class="logout-btn" onclick="logout()">
+                        <i class="fas fa-sign-out-alt"></i> ログアウト
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- ナビゲーション -->
+        <nav class="nav-container">
+            <div class="nav-content">
+                <ul class="nav-tabs">
+                    <li><a href="02_dashboard.html" class="active">
+                        <i class="fas fa-tachometer-alt"></i> ダッシュボード
+                    </a></li>
+                    <li><a href="03_employee_list.html">
+                        <i class="fas fa-users"></i> 社員一覧
+                    </a></li>
+                    <li><a href="04_employee_form.html">
+                        <i class="fas fa-user-plus"></i> 社員登録
+                    </a></li>
+                    <li><a href="05_csv_import_export.html">
+                        <i class="fas fa-file-csv"></i> CSV入出力
+                    </a></li>
+                </ul>
+            </div>
+        </nav>
+
+        <!-- メインコンテンツ -->
+        <main class="main-content">
+            <!-- ダッシュボードヘッダー -->
+            <div class="dashboard-header">
+                <h2>ダッシュボード</h2>
+                <div class="last-updated">
+                    <i class="fas fa-sync-alt"></i> 最終更新: <span id="lastUpdated">2024-08-24 14:30</span>
+                </div>
+            </div>
+
+            <!-- 統計カード -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-card-content">
+                        <div class="stat-card-header">
+                            <div class="stat-card-icon">
+                                <i class="fas fa-users"></i>
+                            </div>
+                            <div class="stat-card-trend trend-up">
+                                <i class="fas fa-arrow-up"></i> +5.2%
+                            </div>
+                        </div>
+                        <div class="stat-card-value">123</div>
+                        <div class="stat-card-label">総社員数</div>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-card-content">
+                        <div class="stat-card-header">
+                            <div class="stat-card-icon">
+                                <i class="fas fa-building"></i>
+                            </div>
+                            <div class="stat-card-trend trend-up">
+                                <i class="fas fa-arrow-up"></i> +12.5%
+                            </div>
+                        </div>
+                        <div class="stat-card-value">8</div>
+                        <div class="stat-card-label">部署数</div>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-card-content">
+                        <div class="stat-card-header">
+                            <div class="stat-card-icon">
+                                <i class="fas fa-user-plus"></i>
+                            </div>
+                            <div class="stat-card-trend trend-up">
+                                <i class="fas fa-arrow-up"></i> +25%
+                            </div>
+                        </div>
+                        <div class="stat-card-value">5</div>
+                        <div class="stat-card-label">今月の新入社員</div>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-card-content">
+                        <div class="stat-card-header">
+                            <div class="stat-card-icon">
+                                <i class="fas fa-chart-line"></i>
+                            </div>
+                            <div class="stat-card-trend trend-down">
+                                <i class="fas fa-arrow-down"></i> -2.1%
+                            </div>
+                        </div>
+                        <div class="stat-card-value">95%</div>
+                        <div class="stat-card-label">在籍率</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- チャートセクション -->
+            <div class="charts-section">
+                <!-- 部署別人数グラフ -->
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3 class="chart-title">部署別人数</h3>
+                        <div class="chart-period">
+                            <button class="active">月次</button>
+                            <button>四半期</button>
+                            <button>年次</button>
+                        </div>
+                    </div>
+                    <div class="chart-container" id="departmentChart">
+                        <div class="bar" style="height: 80%;">
+                            <div class="bar-value">35</div>
+                            <div class="bar-label">開発部</div>
+                        </div>
+                        <div class="bar" style="height: 64%;">
+                            <div class="bar-value">28</div>
+                            <div class="bar-label">営業部</div>
+                        </div>
+                        <div class="bar" style="height: 45%;">
+                            <div class="bar-value">20</div>
+                            <div class="bar-label">総務部</div>
+                        </div>
+                        <div class="bar" style="height: 34%;">
+                            <div class="bar-value">15</div>
+                            <div class="bar-label">人事部</div>
+                        </div>
+                        <div class="bar" style="height: 57%;">
+                            <div class="bar-value">25</div>
+                            <div class="bar-label">経理部</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 部署別統計 -->
+                <div class="activity-card">
+                    <div class="activity-header">
+                        <h3 class="chart-title">部署別詳細</h3>
+                        <button class="btn btn-primary btn-small">詳細表示</button>
+                    </div>
+                    <div class="department-stats">
+                        <div class="dept-item">
+                            <div class="dept-count">35</div>
+                            <div class="dept-name">開発部</div>
+                        </div>
+                        <div class="dept-item">
+                            <div class="dept-count">28</div>
+                            <div class="dept-name">営業部</div>
+                        </div>
+                        <div class="dept-item">
+                            <div class="dept-count">25</div>
+                            <div class="dept-name">経理部</div>
+                        </div>
+                        <div class="dept-item">
+                            <div class="dept-count">20</div>
+                            <div class="dept-name">総務部</div>
+                        </div>
+                        <div class="dept-item">
+                            <div class="dept-count">15</div>
+                            <div class="dept-name">人事部</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 最近のアクティビティ -->
+            <div class="activity-card">
+                <div class="activity-header">
+                    <h3 class="chart-title">最近のアクティビティ</h3>
+                    <a href="03_employee_list.html" class="btn btn-secondary btn-small">すべて表示</a>
+                </div>
+                <ul class="activity-list">
+                    <li class="activity-item">
+                        <div class="activity-icon new">
+                            <i class="fas fa-user-plus"></i>
+                        </div>
+                        <div class="activity-content">
+                            <div class="activity-title">新しい社員が登録されました</div>
+                            <div class="activity-description">田中太郎さんが開発部に配属されました</div>
+                        </div>
+                        <div class="activity-time">2時間前</div>
+                    </li>
+                    <li class="activity-item">
+                        <div class="activity-icon update">
+                            <i class="fas fa-edit"></i>
+                        </div>
+                        <div class="activity-content">
+                            <div class="activity-title">社員情報が更新されました</div>
+                            <div class="activity-description">佐藤花子さんの役職が係長に変更されました</div>
+                        </div>
+                        <div class="activity-time">5時間前</div>
+                    </li>
+                    <li class="activity-item">
+                        <div class="activity-icon new">
+                            <i class="fas fa-file-csv"></i>
+                        </div>
+                        <div class="activity-content">
+                            <div class="activity-title">CSVインポートが完了しました</div>
+                            <div class="activity-description">15件の社員データが正常に登録されました</div>
+                        </div>
+                        <div class="activity-time">1日前</div>
+                    </li>
+                    <li class="activity-item">
+                        <div class="activity-icon update">
+                            <i class="fas fa-users"></i>
+                        </div>
+                        <div class="activity-content">
+                            <div class="activity-title">部署統計が更新されました</div>
+                            <div class="activity-description">月次レポートが生成されました</div>
+                        </div>
+                        <div class="activity-time">2日前</div>
+                    </li>
+                </ul>
+            </div>
+        </main>
+    </div>
+
+    <!-- アラート用コンテナ -->
+    <div id="alert-container"></div>
+
+    <script src="assets/common.js"></script>
+    <script>
+        // ダッシュボード固有の処理
+        document.addEventListener('DOMContentLoaded', function() {
+            // 最終更新時刻を現在時刻に更新
+            updateLastUpdated();
+
+            // 定期的に統計を更新（実際の実装では適切な間隔で）
+            setInterval(updateStats, 30000); // 30秒ごと
+
+            // チャートの期間切り替え
+            setupChartPeriodButtons();
+
+            // 棒グラフのクリックイベント
+            setupBarClickEvents();
+
+            // 部署統計のクリックイベント
+            setupDepartmentClick();
+        });
+
+        // ログアウト処理
+        function logout() {
+            if (confirm('ログアウトしますか？')) {
+                // ローカルストレージからユーザー情報を削除
+                EmployeeSystem.removeStorageData('employee_system_user');
+                
+                // ログイン画面にリダイレクト
+                window.location.href = '01_login.html';
+            }
+        }
+
+        // 最終更新時刻を更新
+        function updateLastUpdated() {
+            const now = new Date();
+            const formatted = now.toLocaleString('ja-JP', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+            document.getElementById('lastUpdated').textContent = formatted;
+        }
+
+        // 統計データを更新
+        function updateStats() {
+            // 実際の実装ではAPIから最新データを取得
+            console.log('統計データを更新中...');
+            updateLastUpdated();
+        }
+
+        // チャート期間切り替えボタンの設定
+        function setupChartPeriodButtons() {
+            document.querySelectorAll('.chart-period button').forEach(button => {
+                button.addEventListener('click', function() {
+                    // アクティブ状態を切り替え
+                    this.parentNode.querySelectorAll('button').forEach(btn => {
+                        btn.classList.remove('active');
+                    });
+                    this.classList.add('active');
+
+                    // チャートデータを更新（デモ用）
+                    updateChartData(this.textContent);
+                });
+            });
+        }
+
+        // チャートデータ更新
+        function updateChartData(period) {
+            EmployeeSystem.showAlert(`${period}のデータに更新しました`, 'info', 3000);
+            
+            // 実際の実装では選択された期間に応じてAPIからデータを取得し、
+            // チャートを再描画する
+        }
+
+        // 棒グラフのクリックイベント設定
+        function setupBarClickEvents() {
+            document.querySelectorAll('.bar').forEach(bar => {
+                bar.addEventListener('click', function() {
+                    const department = this.querySelector('.bar-label').textContent;
+                    const count = this.querySelector('.bar-value').textContent;
+                    
+                    EmployeeSystem.showAlert(
+                        `${department}: ${count}名の詳細を表示します`, 
+                        'info', 
+                        3000
+                    );
+                    
+                    // 実際の実装では部署詳細ページに遷移
+                    // window.location.href = `department_detail.html?dept=${encodeURIComponent(department)}`;
+                });
+            });
+        }
+
+        // 部署統計のクリックイベント設定
+        function setupDepartmentClick() {
+            document.querySelectorAll('.dept-item').forEach(item => {
+                item.addEventListener('click', function() {
+                    const deptName = this.querySelector('.dept-name').textContent;
+                    const count = this.querySelector('.dept-count').textContent;
+                    
+                    EmployeeSystem.showAlert(
+                        `${deptName} (${count}名) の詳細情報を表示します`, 
+                        'info', 
+                        3000
+                    );
+                });
+            });
+        }
+
+        // ページの可視性が変更された時の処理
+        document.addEventListener('visibilitychange', function() {
+            if (!document.hidden) {
+                // ページが再び表示された時に統計を更新
+                updateStats();
+            }
+        });
+
+        // 統計カードのアニメーション
+        function animateStatCards() {
+            const cards = document.querySelectorAll('.stat-card');
+            cards.forEach((card, index) => {
+                setTimeout(() => {
+                    card.style.opacity = '0';
+                    card.style.transform = 'translateY(20px)';
+                    
+                    requestAnimationFrame(() => {
+                        card.style.transition = 'all 0.6s ease';
+                        card.style.opacity = '1';
+                        card.style.transform = 'translateY(0)';
+                    });
+                }, index * 100);
+            });
+        }
+
+        // ページロード後にアニメーションを実行
+        window.addEventListener('load', function() {
+            setTimeout(animateStatCards, 500);
+        });
+
+        // リアルタイム更新のシミュレーション
+        function simulateRealTimeUpdates() {
+            setInterval(() => {
+                // ランダムに統計値を微調整（デモ用）
+                const statValues = document.querySelectorAll('.stat-card-value');
+                statValues.forEach(value => {
+                    if (Math.random() > 0.95) { // 5%の確率で更新
+                        const currentValue = parseInt(value.textContent);
+                        const change = Math.random() > 0.5 ? 1 : -1;
+                        const newValue = Math.max(0, currentValue + change);
+                        
+                        if (newValue !== currentValue) {
+                            value.style.transition = 'all 0.3s ease';
+                            value.style.transform = 'scale(1.1)';
+                            value.textContent = newValue;
+                            
+                            setTimeout(() => {
+                                value.style.transform = 'scale(1)';
+                            }, 300);
+                        }
+                    }
+                });
+            }, 10000); // 10秒ごと
+        }
+
+        // リアルタイム更新を開始
+        simulateRealTimeUpdates();
+    </script>
+</body>
+</html>

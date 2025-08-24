@@ -1,0 +1,1353 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CSV入出力 - 社員管理システム</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="assets/common.css" rel="stylesheet">
+    <style>
+        /* レイアウト */
+        .main-container {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* ヘッダー */
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 1rem 2rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header h1 {
+            font-size: 24px;
+            font-weight: 600;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+        }
+
+        .logout-btn {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.3s;
+            font-size: 14px;
+        }
+
+        .logout-btn:hover {
+            background: rgba(255,255,255,0.3);
+        }
+
+        /* ナビゲーション */
+        .nav-container {
+            background: white;
+            border-bottom: 1px solid #e0e0e0;
+            padding: 0 2rem;
+        }
+
+        .nav-content {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .nav-tabs {
+            display: flex;
+            gap: 0;
+            list-style: none;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .nav-tabs li {
+            margin-bottom: -1px;
+        }
+
+        .nav-tabs a {
+            display: flex;
+            align-items: center;
+            padding: 15px 25px;
+            color: #666;
+            text-decoration: none;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s;
+            font-weight: 500;
+        }
+
+        .nav-tabs a:hover,
+        .nav-tabs a.active {
+            color: #667eea;
+            border-bottom-color: #667eea;
+            background: #f8f9ff;
+        }
+
+        .nav-tabs i {
+            margin-right: 8px;
+        }
+
+        /* メインコンテンツ */
+        .main-content {
+            flex: 1;
+            padding: 30px 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        /* ページヘッダー */
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        .page-header h2 {
+            color: #333;
+            font-size: 32px;
+            font-weight: 700;
+        }
+
+        /* CSV操作カード */
+        .csv-operations {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+
+        .csv-card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            overflow: hidden;
+            transition: transform 0.3s;
+        }
+
+        .csv-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .csv-card-header {
+            padding: 25px 30px;
+            border-bottom: 1px solid #f0f0f0;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .csv-card-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 24px;
+        }
+
+        .import-icon {
+            background: linear-gradient(135deg, #4caf50, #2e7d32);
+        }
+
+        .export-icon {
+            background: linear-gradient(135deg, #2196f3, #1976d2);
+        }
+
+        .csv-card-title {
+            flex: 1;
+        }
+
+        .csv-card-title h3 {
+            margin: 0 0 5px 0;
+            font-size: 24px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .csv-card-title p {
+            margin: 0;
+            color: #666;
+            font-size: 16px;
+        }
+
+        .csv-card-body {
+            padding: 30px;
+        }
+
+        /* ファイルアップロード（インポート用） */
+        .file-drop-zone {
+            border: 3px dashed #ddd;
+            border-radius: 12px;
+            padding: 50px 30px;
+            text-align: center;
+            transition: all 0.3s;
+            cursor: pointer;
+            background: #fafafa;
+            position: relative;
+        }
+
+        .file-drop-zone:hover,
+        .file-drop-zone.dragover {
+            border-color: #4caf50;
+            background: #f1f8e9;
+        }
+
+        .file-drop-zone input[type="file"] {
+            position: absolute;
+            opacity: 0;
+            width: 100%;
+            height: 100%;
+            cursor: pointer;
+        }
+
+        .file-drop-icon {
+            font-size: 64px;
+            color: #ddd;
+            margin-bottom: 20px;
+            transition: color 0.3s;
+        }
+
+        .file-drop-zone:hover .file-drop-icon {
+            color: #4caf50;
+        }
+
+        .file-drop-text {
+            color: #666;
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        .file-drop-subtext {
+            color: #999;
+            font-size: 14px;
+        }
+
+        /* ファイル情報表示 */
+        .file-info-display {
+            display: none;
+            background: #e8f5e9;
+            border: 2px solid #4caf50;
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+
+        .file-info-display.show {
+            display: block;
+        }
+
+        .file-details {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .file-meta {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .file-icon-display {
+            width: 50px;
+            height: 50px;
+            background: #4caf50;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 20px;
+        }
+
+        .file-data {
+            flex: 1;
+        }
+
+        .file-name {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .file-stats {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .file-remove-btn {
+            background: #f44336;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        /* エクスポート設定 */
+        .export-settings {
+            background: #f8f9ff;
+            border-radius: 8px;
+            padding: 25px;
+            margin-bottom: 25px;
+        }
+
+        .settings-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .setting-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .setting-group label {
+            font-weight: 600;
+            color: #555;
+            font-size: 14px;
+        }
+
+        .setting-group select,
+        .setting-group input {
+            padding: 10px 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 15px;
+        }
+
+        .checkbox-group input[type="checkbox"] {
+            transform: scale(1.2);
+        }
+
+        /* CSVフォーマット情報 */
+        .format-info {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 25px;
+        }
+
+        .format-info h4 {
+            color: #856404;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .format-table {
+            background: white;
+            border-radius: 6px;
+            overflow: hidden;
+            font-size: 13px;
+            font-family: 'Courier New', monospace;
+        }
+
+        .format-table table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .format-table th,
+        .format-table td {
+            padding: 8px 12px;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
+
+        .format-table th {
+            background: #f5f5f5;
+            font-weight: 600;
+            color: #333;
+        }
+
+        /* 処理履歴 */
+        .history-section {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            overflow: hidden;
+            margin-top: 40px;
+        }
+
+        .history-header {
+            background: linear-gradient(135deg, #f8f9ff 0%, #e3f2fd 100%);
+            padding: 25px 30px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .history-header h3 {
+            margin: 0;
+            color: #333;
+            font-size: 20px;
+            font-weight: 600;
+        }
+
+        .history-list {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .history-item {
+            display: flex;
+            align-items: center;
+            padding: 20px 30px;
+            border-bottom: 1px solid #f0f0f0;
+            transition: background 0.2s;
+        }
+
+        .history-item:hover {
+            background: #f8f9ff;
+        }
+
+        .history-item:last-child {
+            border-bottom: none;
+        }
+
+        .history-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 16px;
+            margin-right: 15px;
+        }
+
+        .history-icon.import { background: #4caf50; }
+        .history-icon.export { background: #2196f3; }
+        .history-icon.error { background: #f44336; }
+
+        .history-content {
+            flex: 1;
+        }
+
+        .history-title {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 3px;
+        }
+
+        .history-detail {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 2px;
+        }
+
+        .history-time {
+            color: #999;
+            font-size: 12px;
+        }
+
+        .history-status {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .status-success {
+            background: #e8f5e8;
+            color: #2e7d32;
+        }
+
+        .status-error {
+            background: #ffebee;
+            color: #c62828;
+        }
+
+        .status-processing {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        /* プログレスバー */
+        .progress-section {
+            display: none;
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 20px;
+            border: 2px solid #e0e0e0;
+        }
+
+        .progress-section.show {
+            display: block;
+        }
+
+        .progress-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .progress-title {
+            font-weight: 600;
+            color: #333;
+        }
+
+        .progress-cancel {
+            background: #f44336;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        .progress-bar-container {
+            background: #f0f0f0;
+            border-radius: 10px;
+            height: 20px;
+            overflow: hidden;
+            margin-bottom: 10px;
+        }
+
+        .progress-bar {
+            background: linear-gradient(90deg, #4caf50, #2e7d32);
+            height: 100%;
+            border-radius: 10px;
+            transition: width 0.3s;
+            position: relative;
+        }
+
+        .progress-text {
+            display: flex;
+            justify-content: space-between;
+            font-size: 14px;
+            color: #666;
+        }
+
+        /* レスポンシブ対応 */
+        @media (max-width: 768px) {
+            .header-content {
+                flex-direction: column;
+                gap: 15px;
+                text-align: center;
+            }
+
+            .main-content {
+                padding: 20px 15px;
+            }
+
+            .nav-container {
+                padding: 0 15px;
+            }
+
+            .nav-tabs {
+                overflow-x: auto;
+                white-space: nowrap;
+                -webkit-overflow-scrolling: touch;
+            }
+
+            .page-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 15px;
+            }
+
+            .page-header h2 {
+                font-size: 28px;
+            }
+
+            .csv-operations {
+                grid-template-columns: 1fr;
+                gap: 25px;
+            }
+
+            .csv-card-header {
+                padding: 20px 25px;
+            }
+
+            .csv-card-body {
+                padding: 25px;
+            }
+
+            .file-drop-zone {
+                padding: 40px 20px;
+            }
+
+            .file-drop-icon {
+                font-size: 48px;
+            }
+
+            .settings-grid {
+                grid-template-columns: 1fr;
+                gap: 15px;
+            }
+
+            .history-item {
+                padding: 15px 20px;
+            }
+
+            .history-header {
+                padding: 20px 25px;
+            }
+
+            .format-table {
+                font-size: 11px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .header {
+                padding: 1rem 15px;
+            }
+
+            .csv-card-header {
+                flex-direction: column;
+                text-align: center;
+                gap: 10px;
+            }
+
+            .file-drop-zone {
+                padding: 30px 15px;
+            }
+
+            .file-drop-icon {
+                font-size: 40px;
+            }
+
+            .file-details {
+                flex-direction: column;
+                gap: 15px;
+            }
+
+            .file-meta {
+                justify-content: center;
+            }
+
+            .history-item {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+            }
+
+            .history-icon {
+                align-self: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="main-container">
+        <!-- ヘッダー -->
+        <header class="header">
+            <div class="header-content">
+                <h1><i class="fas fa-file-csv"></i> 社員管理システム</h1>
+                <div class="user-info">
+                    <div class="user-avatar">
+                        <i class="fas fa-user"></i>
+                    </div>
+                    <div>
+                        <div style="font-weight: 600;">管理者</div>
+                        <div style="font-size: 12px; opacity: 0.8;">admin@company.com</div>
+                    </div>
+                    <button class="logout-btn" onclick="logout()">
+                        <i class="fas fa-sign-out-alt"></i> ログアウト
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- ナビゲーション -->
+        <nav class="nav-container">
+            <div class="nav-content">
+                <ul class="nav-tabs">
+                    <li><a href="02_dashboard.html">
+                        <i class="fas fa-tachometer-alt"></i> ダッシュボード
+                    </a></li>
+                    <li><a href="03_employee_list.html">
+                        <i class="fas fa-users"></i> 社員一覧
+                    </a></li>
+                    <li><a href="04_employee_form.html">
+                        <i class="fas fa-user-plus"></i> 社員登録
+                    </a></li>
+                    <li><a href="05_csv_import_export.html" class="active">
+                        <i class="fas fa-file-csv"></i> CSV入出力
+                    </a></li>
+                </ul>
+            </div>
+        </nav>
+
+        <!-- メインコンテンツ -->
+        <main class="main-content">
+            <!-- ページヘッダー -->
+            <div class="page-header">
+                <h2>CSV入出力</h2>
+            </div>
+
+            <!-- CSV操作カード -->
+            <div class="csv-operations">
+                <!-- インポートカード -->
+                <div class="csv-card">
+                    <div class="csv-card-header">
+                        <div class="csv-card-icon import-icon">
+                            <i class="fas fa-upload"></i>
+                        </div>
+                        <div class="csv-card-title">
+                            <h3>CSVインポート</h3>
+                            <p>社員データを一括登録</p>
+                        </div>
+                    </div>
+                    <div class="csv-card-body">
+                        <!-- ファイルドロップゾーン -->
+                        <div class="file-drop-zone" id="fileDropZone">
+                            <input type="file" id="csvFileInput" accept=".csv" multiple="false">
+                            <div class="file-drop-icon">
+                                <i class="fas fa-cloud-upload-alt"></i>
+                            </div>
+                            <div class="file-drop-text">CSVファイルを選択またはドラッグ＆ドロップ</div>
+                            <div class="file-drop-subtext">対応形式: .csv（最大10MB）</div>
+                        </div>
+
+                        <!-- ファイル情報表示 -->
+                        <div class="file-info-display" id="fileInfoDisplay">
+                            <div class="file-details">
+                                <div class="file-meta">
+                                    <div class="file-icon-display">
+                                        <i class="fas fa-file-csv"></i>
+                                    </div>
+                                    <div class="file-data">
+                                        <div class="file-name" id="selectedFileName">employees.csv</div>
+                                        <div class="file-stats">
+                                            <span id="fileSize">2.3 MB</span> • 
+                                            <span id="recordCount">150</span> 件のレコード
+                                        </div>
+                                    </div>
+                                </div>
+                                <button class="file-remove-btn" onclick="removeSelectedFile()">
+                                    <i class="fas fa-times"></i> 削除
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- インポート設定 -->
+                        <div class="export-settings">
+                            <h4 style="margin-bottom: 15px; color: #333;">インポート設定</h4>
+                            <div class="settings-grid">
+                                <div class="setting-group">
+                                    <label>重複データの処理</label>
+                                    <select id="duplicateHandling">
+                                        <option value="skip">スキップ</option>
+                                        <option value="update">更新</option>
+                                        <option value="error">エラー</option>
+                                    </select>
+                                </div>
+                                <div class="setting-group">
+                                    <label>文字エンコーディング</label>
+                                    <select id="encoding">
+                                        <option value="utf8">UTF-8</option>
+                                        <option value="sjis">Shift_JIS</option>
+                                        <option value="eucjp">EUC-JP</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="checkbox-group">
+                                <input type="checkbox" id="validateData" checked>
+                                <label for="validateData">データ検証を実行する</label>
+                            </div>
+                            <div class="checkbox-group">
+                                <input type="checkbox" id="backupBeforeImport">
+                                <label for="backupBeforeImport">インポート前にバックアップを作成</label>
+                            </div>
+                        </div>
+
+                        <button class="btn btn-success btn-large" onclick="startImport()" style="width: 100%;">
+                            <i class="fas fa-upload"></i> インポート実行
+                        </button>
+                    </div>
+                </div>
+
+                <!-- エクスポートカード -->
+                <div class="csv-card">
+                    <div class="csv-card-header">
+                        <div class="csv-card-icon export-icon">
+                            <i class="fas fa-download"></i>
+                        </div>
+                        <div class="csv-card-title">
+                            <h3>CSVエクスポート</h3>
+                            <p>社員データをダウンロード</p>
+                        </div>
+                    </div>
+                    <div class="csv-card-body">
+                        <!-- エクスポート設定 -->
+                        <div class="export-settings">
+                            <h4 style="margin-bottom: 15px; color: #333;">エクスポート設定</h4>
+                            <div class="settings-grid">
+                                <div class="setting-group">
+                                    <label>対象データ</label>
+                                    <select id="exportRange">
+                                        <option value="all">全社員データ</option>
+                                        <option value="active">在籍者のみ</option>
+                                        <option value="department">部署別</option>
+                                        <option value="custom">カスタム条件</option>
+                                    </select>
+                                </div>
+                                <div class="setting-group">
+                                    <label>部署選択</label>
+                                    <select id="exportDepartment" disabled>
+                                        <option value="">全部署</option>
+                                        <option value="開発部">開発部</option>
+                                        <option value="営業部">営業部</option>
+                                        <option value="総務部">総務部</option>
+                                        <option value="人事部">人事部</option>
+                                        <option value="経理部">経理部</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="settings-grid">
+                                <div class="setting-group">
+                                    <label>出力形式</label>
+                                    <select id="exportFormat">
+                                        <option value="csv">CSV</option>
+                                        <option value="xlsx">Excel (.xlsx)</option>
+                                        <option value="json">JSON</option>
+                                    </select>
+                                </div>
+                                <div class="setting-group">
+                                    <label>文字エンコーディング</label>
+                                    <select id="exportEncoding">
+                                        <option value="utf8">UTF-8</option>
+                                        <option value="sjis">Shift_JIS</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="checkbox-group">
+                                <input type="checkbox" id="includeHeader" checked>
+                                <label for="includeHeader">ヘッダー行を含める</label>
+                            </div>
+                            <div class="checkbox-group">
+                                <input type="checkbox" id="includeDeletedData">
+                                <label for="includeDeletedData">削除済みデータも含める</label>
+                            </div>
+                        </div>
+
+                        <div style="display: flex; gap: 10px;">
+                            <button class="btn btn-secondary" onclick="previewExport()" style="flex: 1;">
+                                <i class="fas fa-eye"></i> プレビュー
+                            </button>
+                            <button class="btn btn-primary btn-large" onclick="startExport()" style="flex: 2;">
+                                <i class="fas fa-download"></i> エクスポート実行
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CSVフォーマット情報 -->
+            <div class="format-info">
+                <h4><i class="fas fa-info-circle"></i> CSVフォーマット仕様</h4>
+                <p style="margin-bottom: 15px;">インポートするCSVファイルは以下の形式で作成してください：</p>
+                <div class="format-table">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>列番号</th>
+                                <th>項目名</th>
+                                <th>必須</th>
+                                <th>形式</th>
+                                <th>例</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr><td>1</td><td>社員ID</td><td>○</td><td>英数字</td><td>EMP001</td></tr>
+                            <tr><td>2</td><td>姓</td><td>○</td><td>文字列</td><td>田中</td></tr>
+                            <tr><td>3</td><td>名</td><td>○</td><td>文字列</td><td>太郎</td></tr>
+                            <tr><td>4</td><td>部署</td><td>○</td><td>文字列</td><td>開発部</td></tr>
+                            <tr><td>5</td><td>役職</td><td>○</td><td>文字列</td><td>主任</td></tr>
+                            <tr><td>6</td><td>入社日</td><td>○</td><td>YYYY-MM-DD</td><td>2022-04-01</td></tr>
+                            <tr><td>7</td><td>メール</td><td>○</td><td>メール形式</td><td>tanaka@company.com</td></tr>
+                            <tr><td>8</td><td>電話番号</td><td></td><td>文字列</td><td>03-1234-5678</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- プログレス表示 -->
+            <div class="progress-section" id="progressSection">
+                <div class="progress-header">
+                    <div class="progress-title" id="progressTitle">処理中...</div>
+                    <button class="progress-cancel" onclick="cancelOperation()">キャンセル</button>
+                </div>
+                <div class="progress-bar-container">
+                    <div class="progress-bar" id="progressBar" style="width: 0%"></div>
+                </div>
+                <div class="progress-text">
+                    <span id="progressStatus">準備中...</span>
+                    <span id="progressPercent">0%</span>
+                </div>
+            </div>
+
+            <!-- 処理履歴 -->
+            <div class="history-section">
+                <div class="history-header">
+                    <h3><i class="fas fa-history"></i> 処理履歴</h3>
+                </div>
+                <div class="history-list" id="historyList">
+                    <div class="history-item">
+                        <div class="history-icon import">
+                            <i class="fas fa-upload"></i>
+                        </div>
+                        <div class="history-content">
+                            <div class="history-title">社員データインポート</div>
+                            <div class="history-detail">employees_2024-08-24.csv - 125件のレコード</div>
+                            <div class="history-time">2024-08-24 14:30:25</div>
+                        </div>
+                        <div class="history-status status-success">成功</div>
+                    </div>
+                    <div class="history-item">
+                        <div class="history-icon export">
+                            <i class="fas fa-download"></i>
+                        </div>
+                        <div class="history-content">
+                            <div class="history-title">開発部社員データエクスポート</div>
+                            <div class="history-detail">dev_employees.csv - 35件のレコード</div>
+                            <div class="history-time">2024-08-24 13:15:10</div>
+                        </div>
+                        <div class="history-status status-success">成功</div>
+                    </div>
+                    <div class="history-item">
+                        <div class="history-icon import">
+                            <i class="fas fa-upload"></i>
+                        </div>
+                        <div class="history-content">
+                            <div class="history-title">新入社員データインポート</div>
+                            <div class="history-detail">new_employees.csv - 10件中3件エラー</div>
+                            <div class="history-time">2024-08-24 10:45:33</div>
+                        </div>
+                        <div class="history-status status-error">エラー</div>
+                    </div>
+                    <div class="history-item">
+                        <div class="history-icon export">
+                            <i class="fas fa-download"></i>
+                        </div>
+                        <div class="history-content">
+                            <div class="history-title">全社員データエクスポート</div>
+                            <div class="history-detail">all_employees_backup.csv - 123件のレコード</div>
+                            <div class="history-time">2024-08-23 18:00:00</div>
+                        </div>
+                        <div class="history-status status-success">成功</div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- アラート用コンテナ -->
+    <div id="alert-container"></div>
+
+    <script src="assets/common.js"></script>
+    <script>
+        // グローバル変数
+        let selectedFile = null;
+        let currentOperation = null;
+        let operationProgress = 0;
+
+        // ページ初期化
+        document.addEventListener('DOMContentLoaded', function() {
+            setupEventListeners();
+        });
+
+        // イベントリスナー設定
+        function setupEventListeners() {
+            // ファイルドロップゾーン
+            const dropZone = document.getElementById('fileDropZone');
+            const fileInput = document.getElementById('csvFileInput');
+
+            // ドラッグ＆ドロップイベント
+            dropZone.addEventListener('dragover', handleDragOver);
+            dropZone.addEventListener('dragleave', handleDragLeave);
+            dropZone.addEventListener('drop', handleDrop);
+
+            // ファイル選択イベント
+            fileInput.addEventListener('change', handleFileSelect);
+
+            // エクスポート範囲変更
+            document.getElementById('exportRange').addEventListener('change', handleExportRangeChange);
+        }
+
+        // ログアウト処理
+        function logout() {
+            if (confirm('ログアウトしますか？')) {
+                EmployeeSystem.removeStorageData('employee_system_user');
+                window.location.href = '01_login.html';
+            }
+        }
+
+        // ドラッグオーバー処理
+        function handleDragOver(e) {
+            e.preventDefault();
+            e.currentTarget.classList.add('dragover');
+        }
+
+        // ドラッグリーブ処理
+        function handleDragLeave(e) {
+            e.preventDefault();
+            e.currentTarget.classList.remove('dragover');
+        }
+
+        // ドロップ処理
+        function handleDrop(e) {
+            e.preventDefault();
+            e.currentTarget.classList.remove('dragover');
+            
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                handleFileSelection(files[0]);
+            }
+        }
+
+        // ファイル選択処理
+        function handleFileSelect(e) {
+            const files = e.target.files;
+            if (files.length > 0) {
+                handleFileSelection(files[0]);
+            }
+        }
+
+        // ファイル選択共通処理
+        function handleFileSelection(file) {
+            // ファイル形式チェック
+            if (!file.name.toLowerCase().endsWith('.csv')) {
+                EmployeeSystem.showAlert('CSVファイルを選択してください', 'danger', 3000);
+                return;
+            }
+
+            // ファイルサイズチェック（10MB）
+            if (file.size > 10 * 1024 * 1024) {
+                EmployeeSystem.showAlert('ファイルサイズが10MBを超えています', 'danger', 3000);
+                return;
+            }
+
+            selectedFile = file;
+            displayFileInfo(file);
+            
+            // CSVファイルの内容を読み取ってレコード数をカウント（デモ用）
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const csv = e.target.result;
+                const lines = csv.split('\n').filter(line => line.trim() !== '');
+                const recordCount = Math.max(0, lines.length - 1); // ヘッダーを除く
+                
+                document.getElementById('recordCount').textContent = recordCount;
+                EmployeeSystem.showAlert(`CSVファイルを読み込みました (${recordCount}件)`, 'success', 3000);
+            };
+            reader.readAsText(file);
+        }
+
+        // ファイル情報表示
+        function displayFileInfo(file) {
+            document.getElementById('selectedFileName').textContent = file.name;
+            document.getElementById('fileSize').textContent = (file.size / 1024 / 1024).toFixed(1) + ' MB';
+            document.getElementById('fileInfoDisplay').classList.add('show');
+        }
+
+        // 選択ファイル削除
+        function removeSelectedFile() {
+            selectedFile = null;
+            document.getElementById('csvFileInput').value = '';
+            document.getElementById('fileInfoDisplay').classList.remove('show');
+            EmployeeSystem.showAlert('ファイル選択を解除しました', 'info', 2000);
+        }
+
+        // エクスポート範囲変更処理
+        function handleExportRangeChange() {
+            const range = document.getElementById('exportRange').value;
+            const deptSelect = document.getElementById('exportDepartment');
+            
+            deptSelect.disabled = range !== 'department';
+            if (range === 'department') {
+                deptSelect.focus();
+            }
+        }
+
+        // インポート実行
+        function startImport() {
+            if (!selectedFile) {
+                EmployeeSystem.showAlert('CSVファイルを選択してください', 'danger', 3000);
+                return;
+            }
+
+            const duplicateHandling = document.getElementById('duplicateHandling').value;
+            const encoding = document.getElementById('encoding').value;
+            const validateData = document.getElementById('validateData').checked;
+            const backupBeforeImport = document.getElementById('backupBeforeImport').checked;
+
+            // 確認ダイアログ
+            const message = `以下の設定でインポートを実行しますか？
+
+ファイル: ${selectedFile.name}
+重複処理: ${duplicateHandling}
+文字コード: ${encoding}
+データ検証: ${validateData ? '実行する' : '実行しない'}
+事前バックアップ: ${backupBeforeImport ? '作成する' : '作成しない'}`;
+
+            if (!confirm(message)) {
+                return;
+            }
+
+            // プログレス表示開始
+            currentOperation = 'import';
+            showProgress(`CSVインポート - ${selectedFile.name}`);
+            
+            // インポート処理をシミュレート
+            simulateOperation('import', 'インポート', selectedFile.name);
+        }
+
+        // エクスポートプレビュー
+        function previewExport() {
+            const range = document.getElementById('exportRange').value;
+            const department = document.getElementById('exportDepartment').value;
+            const format = document.getElementById('exportFormat').value;
+            
+            let message = 'エクスポート予定データ:\n\n';
+            
+            if (range === 'all') {
+                message += '全社員データ (123件)\n';
+            } else if (range === 'active') {
+                message += '在籍者データ (118件)\n';
+            } else if (range === 'department') {
+                const deptName = department || '全部署';
+                message += `${deptName}データ (35件)\n`;
+            } else {
+                message += 'カスタム条件データ\n';
+            }
+            
+            message += `出力形式: ${format.toUpperCase()}\n`;
+            message += '予想ファイルサイズ: 2.1 MB';
+            
+            alert(message);
+        }
+
+        // エクスポート実行
+        function startExport() {
+            const range = document.getElementById('exportRange').value;
+            const department = document.getElementById('exportDepartment').value;
+            const format = document.getElementById('exportFormat').value;
+            const encoding = document.getElementById('exportEncoding').value;
+            const includeHeader = document.getElementById('includeHeader').checked;
+            
+            // ファイル名生成
+            let fileName = 'employees';
+            if (range === 'department' && department) {
+                fileName = `${department}_employees`;
+            } else if (range === 'active') {
+                fileName = 'active_employees';
+            }
+            
+            const today = new Date().toISOString().split('T')[0];
+            fileName += `_${today}.${format}`;
+
+            // プログレス表示開始
+            currentOperation = 'export';
+            showProgress(`CSVエクスポート - ${fileName}`);
+            
+            // エクスポート処理をシミュレート
+            simulateOperation('export', 'エクスポート', fileName);
+        }
+
+        // プログレス表示
+        function showProgress(title) {
+            document.getElementById('progressTitle').textContent = title;
+            document.getElementById('progressSection').classList.add('show');
+            operationProgress = 0;
+            updateProgressBar(0, '処理を開始しています...');
+        }
+
+        // プログレスバー更新
+        function updateProgressBar(percent, status) {
+            document.getElementById('progressBar').style.width = percent + '%';
+            document.getElementById('progressPercent').textContent = percent + '%';
+            document.getElementById('progressStatus').textContent = status;
+        }
+
+        // プログレス非表示
+        function hideProgress() {
+            document.getElementById('progressSection').classList.remove('show');
+            operationProgress = 0;
+        }
+
+        // 操作キャンセル
+        function cancelOperation() {
+            if (confirm('処理をキャンセルしますか？')) {
+                currentOperation = null;
+                hideProgress();
+                EmployeeSystem.showAlert('処理をキャンセルしました', 'warning', 3000);
+            }
+        }
+
+        // 操作シミュレート
+        function simulateOperation(type, typeName, fileName) {
+            const stages = [
+                { percent: 10, status: 'ファイルを解析中...' },
+                { percent: 30, status: 'データを検証中...' },
+                { percent: 50, status: 'データベース処理中...' },
+                { percent: 70, status: '結果を生成中...' },
+                { percent: 90, status: '最終確認中...' },
+                { percent: 100, status: '完了' }
+            ];
+
+            let currentStage = 0;
+
+            const progressInterval = setInterval(() => {
+                if (!currentOperation || currentStage >= stages.length) {
+                    clearInterval(progressInterval);
+                    if (currentOperation) {
+                        finishOperation(type, typeName, fileName);
+                    }
+                    return;
+                }
+
+                const stage = stages[currentStage];
+                updateProgressBar(stage.percent, stage.status);
+                currentStage++;
+            }, 1000);
+        }
+
+        // 操作完了
+        function finishOperation(type, typeName, fileName) {
+            hideProgress();
+            
+            // 成功メッセージ表示
+            EmployeeSystem.showAlert(`${typeName}が完了しました: ${fileName}`, 'success', 5000);
+            
+            // 履歴に追加
+            addToHistory(type, typeName, fileName, true);
+            
+            // インポートの場合、ファイル選択をクリア
+            if (type === 'import') {
+                removeSelectedFile();
+            }
+            
+            // エクスポートの場合、ダウンロードをシミュレート
+            if (type === 'export') {
+                setTimeout(() => {
+                    // 実際の実装ではファイルダウンロードを実行
+                    EmployeeSystem.showAlert('ダウンロードが開始されました', 'info', 3000);
+                }, 1000);
+            }
+            
+            currentOperation = null;
+        }
+
+        // 履歴に追加
+        function addToHistory(type, typeName, fileName, success) {
+            const historyList = document.getElementById('historyList');
+            const now = new Date();
+            const timeString = now.toLocaleString('ja-JP', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit'
+            });
+
+            const iconClass = type === 'import' ? 'import' : 'export';
+            const iconName = type === 'import' ? 'fa-upload' : 'fa-download';
+            const statusClass = success ? 'status-success' : 'status-error';
+            const statusText = success ? '成功' : 'エラー';
+            
+            const recordCount = type === 'import' ? 
+                (selectedFile ? document.getElementById('recordCount').textContent : '0') : 
+                '123'; // デモ用
+
+            const historyItem = document.createElement('div');
+            historyItem.className = 'history-item';
+            historyItem.innerHTML = `
+                <div class="history-icon ${iconClass}">
+                    <i class="fas ${iconName}"></i>
+                </div>
+                <div class="history-content">
+                    <div class="history-title">${typeName}</div>
+                    <div class="history-detail">${fileName} - ${recordCount}件のレコード</div>
+                    <div class="history-time">${timeString}</div>
+                </div>
+                <div class="history-status ${statusClass}">${statusText}</div>
+            `;
+
+            // 最新の履歴を先頭に追加
+            historyList.insertBefore(historyItem, historyList.firstChild);
+            
+            // 履歴が多くなったら古いものを削除（最大10件）
+            const items = historyList.querySelectorAll('.history-item');
+            if (items.length > 10) {
+                historyList.removeChild(items[items.length - 1]);
+            }
+        }
+
+        // サンプルテンプレートダウンロード（デモ用）
+        function downloadTemplate() {
+            const csvContent = `社員ID,姓,名,部署,役職,入社日,メール,電話番号
+EMP001,田中,太郎,開発部,主任,2022-04-01,tanaka@company.com,03-1234-5678
+EMP002,佐藤,花子,営業部,係長,2021-10-15,sato@company.com,03-2345-6789`;
+            
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = 'employee_template.csv';
+            link.click();
+            
+            EmployeeSystem.showAlert('テンプレートファイルをダウンロードしました', 'success', 3000);
+        }
+
+        // デモ用：ページロード時のメッセージ
+        window.addEventListener('load', function() {
+            setTimeout(() => {
+                EmployeeSystem.showAlert('CSV入出力機能をご利用いただけます', 'info', 4000);
+            }, 1000);
+        });
+    </script>
+</body>
+</html>

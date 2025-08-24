@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ログイン - 社員管理システム</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="assets/common.css" rel="stylesheet">
+    <style>
+        /* ログイン専用スタイル */
+        .login-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+        }
+
+        .login-box {
+            background: white;
+            padding: 50px 40px;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+            width: 450px;
+            max-width: 100%;
+            animation: slideUp 0.6s ease-out;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .login-header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .login-header .logo {
+            font-size: 60px;
+            color: #667eea;
+            margin-bottom: 20px;
+        }
+
+        .login-header h1 {
+            color: #333;
+            font-size: 28px;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        .login-header p {
+            color: #666;
+            font-size: 16px;
+        }
+
+        .form-group {
+            position: relative;
+            margin-bottom: 25px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #555;
+            font-size: 14px;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 15px 20px 15px 50px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            background-color: #fafafa;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #667eea;
+            background-color: white;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .form-group .input-icon {
+            position: absolute;
+            left: 18px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #999;
+            font-size: 18px;
+            pointer-events: none;
+            margin-top: 12px;
+        }
+
+        .form-group.has-error input {
+            border-color: #dc3545;
+            background-color: #fff5f5;
+        }
+
+        .remember-me {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        .remember-me label {
+            display: flex;
+            align-items: center;
+            font-size: 14px;
+            color: #666;
+            cursor: pointer;
+        }
+
+        .remember-me input[type="checkbox"] {
+            margin-right: 8px;
+            transform: scale(1.1);
+        }
+
+        .forgot-password {
+            color: #667eea;
+            text-decoration: none;
+            font-size: 14px;
+            transition: color 0.3s;
+        }
+
+        .forgot-password:hover {
+            color: #5a6fd8;
+            text-decoration: underline;
+        }
+
+        .login-btn {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .login-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+        }
+
+        .login-btn:active {
+            transform: translateY(0);
+        }
+
+        .login-btn:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .login-btn .loading {
+            display: none;
+            margin-right: 8px;
+        }
+
+        .login-btn.loading .loading {
+            display: inline-block;
+        }
+
+        .login-btn.loading .btn-text {
+            opacity: 0.7;
+        }
+
+        .demo-info {
+            margin-top: 30px;
+            padding: 20px;
+            background: #f8f9ff;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+        }
+
+        .demo-info h4 {
+            color: #667eea;
+            margin-bottom: 10px;
+            font-size: 16px;
+        }
+
+        .demo-info p {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+
+        .demo-info .credentials {
+            background: white;
+            padding: 10px;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            color: #333;
+        }
+
+        .system-status {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            color: rgba(255,255,255,0.8);
+            font-size: 12px;
+        }
+
+        .system-status .status-dot {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            background: #4CAF50;
+            border-radius: 50%;
+            margin-right: 5px;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+
+        /* エラーメッセージ */
+        .error-message {
+            color: #dc3545;
+            font-size: 14px;
+            margin-top: 5px;
+            display: flex;
+            align-items: center;
+        }
+
+        .error-message i {
+            margin-right: 5px;
+        }
+
+        /* レスポンシブ対応 */
+        @media (max-width: 480px) {
+            .login-container {
+                padding: 15px;
+            }
+
+            .login-box {
+                padding: 40px 30px;
+            }
+
+            .login-header .logo {
+                font-size: 50px;
+            }
+
+            .login-header h1 {
+                font-size: 24px;
+            }
+
+            .form-group input {
+                padding: 12px 15px 12px 45px;
+                font-size: 16px;
+            }
+
+            .form-group .input-icon {
+                left: 15px;
+                font-size: 16px;
+            }
+
+            .demo-info {
+                margin-top: 25px;
+                padding: 15px;
+            }
+
+            .system-status {
+                position: relative;
+                bottom: auto;
+                left: auto;
+                text-align: center;
+                margin-top: 20px;
+                color: rgba(255,255,255,0.9);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <div class="login-box">
+            <div class="login-header">
+                <div class="logo">
+                    <i class="fas fa-users"></i>
+                </div>
+                <h1>社員管理システム</h1>
+                <p>Employee Management System</p>
+            </div>
+
+            <form id="loginForm" novalidate>
+                <div class="form-group">
+                    <label for="email">メールアドレス</label>
+                    <div style="position: relative;">
+                        <i class="fas fa-envelope input-icon"></i>
+                        <input type="email" id="email" name="email" placeholder="例：admin@company.com" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="password">パスワード</label>
+                    <div style="position: relative;">
+                        <i class="fas fa-lock input-icon"></i>
+                        <input type="password" id="password" name="password" placeholder="パスワードを入力" required>
+                    </div>
+                </div>
+
+                <div class="remember-me">
+                    <label>
+                        <input type="checkbox" id="remember" name="remember">
+                        ログイン状態を記憶する
+                    </label>
+                    <a href="#" class="forgot-password">パスワードを忘れた場合</a>
+                </div>
+
+                <button type="submit" class="login-btn" id="loginBtn">
+                    <div class="loading"></div>
+                    <span class="btn-text">
+                        <i class="fas fa-sign-in-alt"></i> ログイン
+                    </span>
+                </button>
+            </form>
+
+            <div class="demo-info">
+                <h4><i class="fas fa-info-circle"></i> デモ用アカウント</h4>
+                <p>以下の情報でログインできます：</p>
+                <div class="credentials">
+                    <strong>管理者:</strong><br>
+                    Email: admin@company.com<br>
+                    Password: admin123<br><br>
+                    
+                    <strong>一般ユーザー:</strong><br>
+                    Email: user@company.com<br>
+                    Password: user123
+                </div>
+            </div>
+        </div>
+
+        <div class="system-status">
+            <span class="status-dot"></span>
+            システム稼働中
+        </div>
+    </div>
+
+    <!-- アラート用コンテナ -->
+    <div id="alert-container"></div>
+
+    <script src="assets/common.js"></script>
+    <script>
+        // ページ固有の処理
+        document.addEventListener('DOMContentLoaded', function() {
+            const loginForm = document.getElementById('loginForm');
+            const loginBtn = document.getElementById('loginBtn');
+            const emailInput = document.getElementById('email');
+            const passwordInput = document.getElementById('password');
+
+            // フォームのバリデーションルール
+            const validationRules = {
+                email: {
+                    required: true,
+                    email: true,
+                    messages: {
+                        required: 'メールアドレスを入力してください',
+                        email: '正しいメールアドレス形式で入力してください'
+                    }
+                },
+                password: {
+                    required: true,
+                    minLength: 6,
+                    messages: {
+                        required: 'パスワードを入力してください',
+                        minLength: 'パスワードは6文字以上で入力してください'
+                    }
+                }
+            };
+
+            // ログインフォーム送信処理
+            loginForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                // フォームバリデーション
+                if (!EmployeeSystem.validateForm('loginForm', validationRules)) {
+                    return;
+                }
+
+                // ローディング状態にする
+                setLoadingState(true);
+
+                // 入力値取得
+                const email = emailInput.value.trim();
+                const password = passwordInput.value;
+                const remember = document.getElementById('remember').checked;
+
+                // デモ用認証処理
+                setTimeout(() => {
+                    if (authenticateUser(email, password)) {
+                        // 認証成功
+                        if (remember) {
+                            EmployeeSystem.setStorageData(EmployeeSystem.STORAGE_KEYS.USER, {
+                                email: email,
+                                loginTime: new Date().toISOString()
+                            });
+                        }
+
+                        EmployeeSystem.showAlert('ログインに成功しました', 'success');
+                        
+                        // 2秒後にダッシュボードに遷移
+                        setTimeout(() => {
+                            window.location.href = '02_dashboard.html';
+                        }, 2000);
+                    } else {
+                        // 認証失敗
+                        EmployeeSystem.showAlert('メールアドレスまたはパスワードが間違っています', 'danger');
+                        setLoadingState(false);
+                        
+                        // パスワードフィールドをクリア
+                        passwordInput.value = '';
+                        passwordInput.focus();
+                    }
+                }, 1500); // 実際のAPI呼び出しをシミュレート
+            });
+
+            // デモ用認証関数
+            function authenticateUser(email, password) {
+                const validAccounts = [
+                    { email: 'admin@company.com', password: 'admin123', role: 'admin' },
+                    { email: 'user@company.com', password: 'user123', role: 'user' }
+                ];
+
+                return validAccounts.some(account => 
+                    account.email === email && account.password === password
+                );
+            }
+
+            // ローディング状態の制御
+            function setLoadingState(isLoading) {
+                if (isLoading) {
+                    loginBtn.classList.add('loading');
+                    loginBtn.disabled = true;
+                } else {
+                    loginBtn.classList.remove('loading');
+                    loginBtn.disabled = false;
+                }
+            }
+
+            // Enter キーでのフォーム送信
+            [emailInput, passwordInput].forEach(input => {
+                input.addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter') {
+                        loginForm.dispatchEvent(new Event('submit'));
+                    }
+                });
+            });
+
+            // パスワード忘れた場合のリンク処理
+            document.querySelector('.forgot-password').addEventListener('click', function(e) {
+                e.preventDefault();
+                EmployeeSystem.showAlert('パスワードリセット機能は実装予定です', 'info');
+            });
+
+            // 過去のログイン情報をチェック
+            const savedUser = EmployeeSystem.getStorageData('employee_system_user');
+            if (savedUser && savedUser.email) {
+                emailInput.value = savedUser.email;
+                document.getElementById('remember').checked = true;
+                passwordInput.focus();
+            } else {
+                emailInput.focus();
+            }
+
+            // デモ認証情報の自動入力（開発時のみ）
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get('demo') === 'admin') {
+                emailInput.value = 'admin@company.com';
+                passwordInput.value = 'admin123';
+            } else if (urlParams.get('demo') === 'user') {
+                emailInput.value = 'user@company.com';
+                passwordInput.value = 'user123';
+            }
+        });
+
+        // ページ離脱前の処理
+        window.addEventListener('beforeunload', function() {
+            // ローディング状態をクリア
+            const loginBtn = document.getElementById('loginBtn');
+            if (loginBtn) {
+                loginBtn.classList.remove('loading');
+                loginBtn.disabled = false;
+            }
+        });
+    </script>
+</body>
+</html>

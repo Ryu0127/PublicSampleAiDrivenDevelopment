@@ -1,0 +1,1366 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>社員一覧 - 社員管理システム</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="assets/common.css" rel="stylesheet">
+    <style>
+        /* レイアウト */
+        .main-container {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* ヘッダー */
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 1rem 2rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header h1 {
+            font-size: 24px;
+            font-weight: 600;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+        }
+
+        .logout-btn {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.3s;
+            font-size: 14px;
+        }
+
+        .logout-btn:hover {
+            background: rgba(255,255,255,0.3);
+        }
+
+        /* ナビゲーション */
+        .nav-container {
+            background: white;
+            border-bottom: 1px solid #e0e0e0;
+            padding: 0 2rem;
+        }
+
+        .nav-content {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .nav-tabs {
+            display: flex;
+            gap: 0;
+            list-style: none;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .nav-tabs li {
+            margin-bottom: -1px;
+        }
+
+        .nav-tabs a {
+            display: flex;
+            align-items: center;
+            padding: 15px 25px;
+            color: #666;
+            text-decoration: none;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s;
+            font-weight: 500;
+        }
+
+        .nav-tabs a:hover,
+        .nav-tabs a.active {
+            color: #667eea;
+            border-bottom-color: #667eea;
+            background: #f8f9ff;
+        }
+
+        .nav-tabs i {
+            margin-right: 8px;
+        }
+
+        /* メインコンテンツ */
+        .main-content {
+            flex: 1;
+            padding: 30px 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        /* ページヘッダー */
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        .page-header h2 {
+            color: #333;
+            font-size: 32px;
+            font-weight: 700;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        /* 検索・フィルターコントロール */
+        .controls-section {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            margin-bottom: 30px;
+        }
+
+        .controls-row {
+            display: flex;
+            gap: 20px;
+            align-items: end;
+            flex-wrap: wrap;
+        }
+
+        .control-group {
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .control-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #555;
+            font-size: 14px;
+        }
+
+        .search-input {
+            position: relative;
+        }
+
+        .search-input input {
+            padding-left: 45px;
+        }
+
+        .search-input .search-icon {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #999;
+            font-size: 16px;
+        }
+
+        .control-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: auto;
+        }
+
+        /* テーブルコンテナ */
+        .table-section {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            overflow: hidden;
+        }
+
+        .table-header {
+            padding: 25px;
+            border-bottom: 1px solid #f0f0f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .table-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .table-meta {
+            color: #666;
+            font-size: 14px;
+        }
+
+        /* テーブルスタイル */
+        .employee-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .employee-table th {
+            background: #f8f9ff;
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+            color: #333;
+            font-size: 14px;
+            border-bottom: 2px solid #e0e0e0;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .employee-table th.sortable {
+            cursor: pointer;
+            user-select: none;
+            position: relative;
+            padding-right: 30px;
+        }
+
+        .employee-table th.sortable:hover {
+            background: #e3f2fd;
+        }
+
+        .employee-table th.sortable::after {
+            content: '\f0dc';
+            font-family: "Font Awesome 6 Free";
+            font-weight: 900;
+            position: absolute;
+            right: 10px;
+            color: #999;
+            font-size: 12px;
+        }
+
+        .employee-table th.sorted-asc::after {
+            content: '\f0de';
+            color: #667eea;
+        }
+
+        .employee-table th.sorted-desc::after {
+            content: '\f0dd';
+            color: #667eea;
+        }
+
+        .employee-table td {
+            padding: 15px;
+            border-bottom: 1px solid #f0f0f0;
+            font-size: 14px;
+        }
+
+        .employee-table tbody tr {
+            transition: background 0.2s;
+        }
+
+        .employee-table tbody tr:hover {
+            background: #f8f9ff;
+        }
+
+        /* 社員情報スタイル */
+        .employee-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .employee-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .employee-details h4 {
+            margin: 0;
+            font-size: 16px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .employee-details p {
+            margin: 2px 0 0 0;
+            font-size: 12px;
+            color: #666;
+        }
+
+        /* ステータスバッジ */
+        .status-badge {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .status-active {
+            background: #e8f5e8;
+            color: #2e7d32;
+        }
+
+        .status-inactive {
+            background: #ffebee;
+            color: #c62828;
+        }
+
+        .status-pending {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        /* 部署バッジ */
+        .dept-badge {
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            background: #f0f0f0;
+            color: #666;
+        }
+
+        .dept-badge.dev { background: #e3f2fd; color: #1976d2; }
+        .dept-badge.sales { background: #e8f5e8; color: #2e7d32; }
+        .dept-badge.admin { background: #fff3cd; color: #856404; }
+        .dept-badge.hr { background: #fce4ec; color: #c2185b; }
+        .dept-badge.finance { background: #f3e5f5; color: #7b1fa2; }
+
+        /* アクションボタン */
+        .action-buttons {
+            display: flex;
+            gap: 8px;
+        }
+
+        .action-btn {
+            padding: 6px 12px;
+            border: none;
+            border-radius: 4px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 600;
+        }
+
+        .action-btn.edit {
+            background: #2196f3;
+            color: white;
+        }
+
+        .action-btn.edit:hover {
+            background: #1976d2;
+        }
+
+        .action-btn.delete {
+            background: #f44336;
+            color: white;
+        }
+
+        .action-btn.delete:hover {
+            background: #d32f2f;
+        }
+
+        .action-btn.view {
+            background: #4caf50;
+            color: white;
+        }
+
+        .action-btn.view:hover {
+            background: #388e3c;
+        }
+
+        /* ページネーション */
+        .pagination-container {
+            padding: 25px;
+            border-top: 1px solid #f0f0f0;
+            display: flex;
+            justify-content: between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .pagination-info {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .pagination {
+            display: flex;
+            gap: 5px;
+            list-style: none;
+        }
+
+        .pagination li {
+            margin: 0;
+        }
+
+        .pagination a {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            text-decoration: none;
+            color: #666;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+
+        .pagination a:hover {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        .pagination .active a {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        .pagination .disabled a {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .pagination .disabled a:hover {
+            background: transparent;
+            color: #666;
+            border-color: #ddd;
+        }
+
+        /* モーダル（詳細表示用） */
+        .employee-modal .modal-content {
+            max-width: 600px;
+        }
+
+        .employee-detail {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .detail-section h4 {
+            margin-bottom: 15px;
+            color: #333;
+            font-size: 18px;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 8px;
+        }
+
+        .detail-item {
+            margin-bottom: 15px;
+        }
+
+        .detail-label {
+            font-weight: 600;
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 5px;
+        }
+
+        .detail-value {
+            color: #333;
+            font-size: 16px;
+        }
+
+        /* レスポンシブ対応 */
+        @media (max-width: 1024px) {
+            .controls-row {
+                flex-direction: column;
+            }
+
+            .control-group {
+                min-width: auto;
+            }
+
+            .control-buttons {
+                width: 100%;
+                justify-content: flex-end;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .header-content {
+                flex-direction: column;
+                gap: 15px;
+                text-align: center;
+            }
+
+            .main-content {
+                padding: 20px 15px;
+            }
+
+            .nav-container {
+                padding: 0 15px;
+            }
+
+            .nav-tabs {
+                overflow-x: auto;
+                white-space: nowrap;
+                -webkit-overflow-scrolling: touch;
+            }
+
+            .page-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 15px;
+            }
+
+            .page-header h2 {
+                font-size: 28px;
+            }
+
+            .header-actions {
+                width: 100%;
+                justify-content: flex-end;
+            }
+
+            /* テーブルをカード表示に変更 */
+            .table-section {
+                overflow: visible;
+            }
+
+            .employee-table,
+            .employee-table thead,
+            .employee-table tbody,
+            .employee-table th,
+            .employee-table td,
+            .employee-table tr {
+                display: block;
+            }
+
+            .employee-table thead tr {
+                position: absolute;
+                top: -9999px;
+                left: -9999px;
+            }
+
+            .employee-table tr {
+                border: 1px solid #ddd;
+                border-radius: 8px;
+                margin-bottom: 15px;
+                padding: 15px;
+                background: white;
+            }
+
+            .employee-table td {
+                border: none;
+                padding: 8px 0;
+                position: relative;
+            }
+
+            .employee-table td::before {
+                content: attr(data-label) ": ";
+                font-weight: 600;
+                color: #666;
+                width: 100px;
+                display: inline-block;
+            }
+
+            .employee-info {
+                flex-direction: column;
+                text-align: center;
+                gap: 8px;
+            }
+
+            .employee-details h4 {
+                font-size: 18px;
+            }
+
+            .action-buttons {
+                justify-content: center;
+                margin-top: 10px;
+            }
+
+            .pagination-container {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .employee-detail {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .header {
+                padding: 1rem 15px;
+            }
+
+            .controls-section {
+                padding: 20px 15px;
+            }
+
+            .table-header {
+                padding: 20px 15px;
+            }
+
+            .action-buttons {
+                flex-direction: column;
+                gap: 5px;
+            }
+
+            .action-btn {
+                width: 100%;
+                padding: 8px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="main-container">
+        <!-- ヘッダー -->
+        <header class="header">
+            <div class="header-content">
+                <h1><i class="fas fa-users"></i> 社員管理システム</h1>
+                <div class="user-info">
+                    <div class="user-avatar">
+                        <i class="fas fa-user"></i>
+                    </div>
+                    <div>
+                        <div style="font-weight: 600;">管理者</div>
+                        <div style="font-size: 12px; opacity: 0.8;">admin@company.com</div>
+                    </div>
+                    <button class="logout-btn" onclick="logout()">
+                        <i class="fas fa-sign-out-alt"></i> ログアウト
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- ナビゲーション -->
+        <nav class="nav-container">
+            <div class="nav-content">
+                <ul class="nav-tabs">
+                    <li><a href="02_dashboard.html">
+                        <i class="fas fa-tachometer-alt"></i> ダッシュボード
+                    </a></li>
+                    <li><a href="03_employee_list.html" class="active">
+                        <i class="fas fa-users"></i> 社員一覧
+                    </a></li>
+                    <li><a href="04_employee_form.html">
+                        <i class="fas fa-user-plus"></i> 社員登録
+                    </a></li>
+                    <li><a href="05_csv_import_export.html">
+                        <i class="fas fa-file-csv"></i> CSV入出力
+                    </a></li>
+                </ul>
+            </div>
+        </nav>
+
+        <!-- メインコンテンツ -->
+        <main class="main-content">
+            <!-- ページヘッダー -->
+            <div class="page-header">
+                <h2>社員一覧</h2>
+                <div class="header-actions">
+                    <button class="btn btn-secondary" onclick="exportEmployees()">
+                        <i class="fas fa-download"></i> エクスポート
+                    </button>
+                    <button class="btn btn-primary" onclick="location.href='04_employee_form.html'">
+                        <i class="fas fa-plus"></i> 新規登録
+                    </button>
+                </div>
+            </div>
+
+            <!-- 検索・フィルターコントロール -->
+            <div class="controls-section">
+                <div class="controls-row">
+                    <div class="control-group">
+                        <label>氏名検索</label>
+                        <div class="search-input">
+                            <input type="text" id="searchName" placeholder="氏名を入力してください">
+                            <i class="fas fa-search search-icon"></i>
+                        </div>
+                    </div>
+                    
+                    <div class="control-group">
+                        <label>部署フィルター</label>
+                        <select id="filterDepartment">
+                            <option value="">全部署</option>
+                            <option value="開発部">開発部</option>
+                            <option value="営業部">営業部</option>
+                            <option value="総務部">総務部</option>
+                            <option value="人事部">人事部</option>
+                            <option value="経理部">経理部</option>
+                        </select>
+                    </div>
+
+                    <div class="control-group">
+                        <label>役職フィルター</label>
+                        <select id="filterPosition">
+                            <option value="">全役職</option>
+                            <option value="部長">部長</option>
+                            <option value="課長">課長</option>
+                            <option value="係長">係長</option>
+                            <option value="主任">主任</option>
+                            <option value="一般">一般</option>
+                        </select>
+                    </div>
+
+                    <div class="control-group">
+                        <label>ステータス</label>
+                        <select id="filterStatus">
+                            <option value="">全ステータス</option>
+                            <option value="active">在籍</option>
+                            <option value="inactive">退職</option>
+                            <option value="pending">保留中</option>
+                        </select>
+                    </div>
+
+                    <div class="control-buttons">
+                        <button class="btn btn-primary" onclick="applyFilters()">
+                            <i class="fas fa-search"></i> 検索
+                        </button>
+                        <button class="btn btn-secondary" onclick="clearFilters()">
+                            <i class="fas fa-undo"></i> クリア
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- テーブルセクション -->
+            <div class="table-section">
+                <div class="table-header">
+                    <h3 class="table-title">社員一覧</h3>
+                    <div class="table-meta" id="tableInfo">
+                        全 <span id="totalCount">123</span> 件中 <span id="displayCount">123</span> 件を表示
+                    </div>
+                </div>
+
+                <table class="employee-table" id="employeeTable">
+                    <thead>
+                        <tr>
+                            <th class="sortable" data-sort="id">社員ID</th>
+                            <th class="sortable" data-sort="name">氏名</th>
+                            <th class="sortable" data-sort="department">部署</th>
+                            <th class="sortable" data-sort="position">役職</th>
+                            <th class="sortable" data-sort="joinDate">入社日</th>
+                            <th class="sortable" data-sort="status">ステータス</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td data-label="社員ID">EMP001</td>
+                            <td data-label="氏名">
+                                <div class="employee-info">
+                                    <div class="employee-avatar">田</div>
+                                    <div class="employee-details">
+                                        <h4>田中 太郎</h4>
+                                        <p>tanaka@company.com</p>
+                                    </div>
+                                </div>
+                            </td>
+                            <td data-label="部署">
+                                <span class="dept-badge dev">開発部</span>
+                            </td>
+                            <td data-label="役職">主任</td>
+                            <td data-label="入社日">2022-04-01</td>
+                            <td data-label="ステータス">
+                                <span class="status-badge status-active">在籍</span>
+                            </td>
+                            <td data-label="操作">
+                                <div class="action-buttons">
+                                    <button class="action-btn view" onclick="viewEmployee('EMP001')">
+                                        <i class="fas fa-eye"></i> 詳細
+                                    </button>
+                                    <button class="action-btn edit" onclick="editEmployee('EMP001')">
+                                        <i class="fas fa-edit"></i> 編集
+                                    </button>
+                                    <button class="action-btn delete" onclick="deleteEmployee('EMP001')">
+                                        <i class="fas fa-trash"></i> 削除
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td data-label="社員ID">EMP002</td>
+                            <td data-label="氏名">
+                                <div class="employee-info">
+                                    <div class="employee-avatar">佐</div>
+                                    <div class="employee-details">
+                                        <h4>佐藤 花子</h4>
+                                        <p>sato@company.com</p>
+                                    </div>
+                                </div>
+                            </td>
+                            <td data-label="部署">
+                                <span class="dept-badge sales">営業部</span>
+                            </td>
+                            <td data-label="役職">係長</td>
+                            <td data-label="入社日">2021-10-15</td>
+                            <td data-label="ステータス">
+                                <span class="status-badge status-active">在籍</span>
+                            </td>
+                            <td data-label="操作">
+                                <div class="action-buttons">
+                                    <button class="action-btn view" onclick="viewEmployee('EMP002')">
+                                        <i class="fas fa-eye"></i> 詳細
+                                    </button>
+                                    <button class="action-btn edit" onclick="editEmployee('EMP002')">
+                                        <i class="fas fa-edit"></i> 編集
+                                    </button>
+                                    <button class="action-btn delete" onclick="deleteEmployee('EMP002')">
+                                        <i class="fas fa-trash"></i> 削除
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td data-label="社員ID">EMP003</td>
+                            <td data-label="氏名">
+                                <div class="employee-info">
+                                    <div class="employee-avatar">鈴</div>
+                                    <div class="employee-details">
+                                        <h4>鈴木 次郎</h4>
+                                        <p>suzuki@company.com</p>
+                                    </div>
+                                </div>
+                            </td>
+                            <td data-label="部署">
+                                <span class="dept-badge admin">総務部</span>
+                            </td>
+                            <td data-label="役職">一般</td>
+                            <td data-label="入社日">2023-01-20</td>
+                            <td data-label="ステータス">
+                                <span class="status-badge status-active">在籍</span>
+                            </td>
+                            <td data-label="操作">
+                                <div class="action-buttons">
+                                    <button class="action-btn view" onclick="viewEmployee('EMP003')">
+                                        <i class="fas fa-eye"></i> 詳細
+                                    </button>
+                                    <button class="action-btn edit" onclick="editEmployee('EMP003')">
+                                        <i class="fas fa-edit"></i> 編集
+                                    </button>
+                                    <button class="action-btn delete" onclick="deleteEmployee('EMP003')">
+                                        <i class="fas fa-trash"></i> 削除
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td data-label="社員ID">EMP004</td>
+                            <td data-label="氏名">
+                                <div class="employee-info">
+                                    <div class="employee-avatar">高</div>
+                                    <div class="employee-details">
+                                        <h4>高橋 美咲</h4>
+                                        <p>takahashi@company.com</p>
+                                    </div>
+                                </div>
+                            </td>
+                            <td data-label="部署">
+                                <span class="dept-badge hr">人事部</span>
+                            </td>
+                            <td data-label="役職">課長</td>
+                            <td data-label="入社日">2020-07-01</td>
+                            <td data-label="ステータス">
+                                <span class="status-badge status-active">在籍</span>
+                            </td>
+                            <td data-label="操作">
+                                <div class="action-buttons">
+                                    <button class="action-btn view" onclick="viewEmployee('EMP004')">
+                                        <i class="fas fa-eye"></i> 詳細
+                                    </button>
+                                    <button class="action-btn edit" onclick="editEmployee('EMP004')">
+                                        <i class="fas fa-edit"></i> 編集
+                                    </button>
+                                    <button class="action-btn delete" onclick="deleteEmployee('EMP004')">
+                                        <i class="fas fa-trash"></i> 削除
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td data-label="社員ID">EMP005</td>
+                            <td data-label="氏名">
+                                <div class="employee-info">
+                                    <div class="employee-avatar">山</div>
+                                    <div class="employee-details">
+                                        <h4>山田 健太</h4>
+                                        <p>yamada@company.com</p>
+                                    </div>
+                                </div>
+                            </td>
+                            <td data-label="部署">
+                                <span class="dept-badge finance">経理部</span>
+                            </td>
+                            <td data-label="役職">係長</td>
+                            <td data-label="入社日">2019-03-15</td>
+                            <td data-label="ステータス">
+                                <span class="status-badge status-pending">保留中</span>
+                            </td>
+                            <td data-label="操作">
+                                <div class="action-buttons">
+                                    <button class="action-btn view" onclick="viewEmployee('EMP005')">
+                                        <i class="fas fa-eye"></i> 詳細
+                                    </button>
+                                    <button class="action-btn edit" onclick="editEmployee('EMP005')">
+                                        <i class="fas fa-edit"></i> 編集
+                                    </button>
+                                    <button class="action-btn delete" onclick="deleteEmployee('EMP005')">
+                                        <i class="fas fa-trash"></i> 削除
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <!-- ページネーション -->
+                <div class="pagination-container">
+                    <div class="pagination-info">
+                        1-5 / 123 件を表示
+                    </div>
+                    <ul class="pagination">
+                        <li class="disabled"><a href="#"><i class="fas fa-angle-left"></i></a></li>
+                        <li class="active"><a href="#">1</a></li>
+                        <li><a href="#">2</a></li>
+                        <li><a href="#">3</a></li>
+                        <li><a href="#">...</a></li>
+                        <li><a href="#">25</a></li>
+                        <li><a href="#"><i class="fas fa-angle-right"></i></a></li>
+                    </ul>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- 社員詳細モーダル -->
+    <div id="employeeModal" class="modal employee-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>社員詳細情報</h3>
+                <button class="close" onclick="EmployeeSystem.closeModal('employeeModal')">&times;</button>
+            </div>
+            <div class="employee-detail">
+                <div class="detail-section">
+                    <h4>基本情報</h4>
+                    <div class="detail-item">
+                        <div class="detail-label">社員ID</div>
+                        <div class="detail-value" id="detailEmpId">-</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">氏名</div>
+                        <div class="detail-value" id="detailName">-</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">メールアドレス</div>
+                        <div class="detail-value" id="detailEmail">-</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">電話番号</div>
+                        <div class="detail-value" id="detailPhone">-</div>
+                    </div>
+                </div>
+                <div class="detail-section">
+                    <h4>勤務情報</h4>
+                    <div class="detail-item">
+                        <div class="detail-label">部署</div>
+                        <div class="detail-value" id="detailDepartment">-</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">役職</div>
+                        <div class="detail-value" id="detailPosition">-</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">入社日</div>
+                        <div class="detail-value" id="detailJoinDate">-</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">ステータス</div>
+                        <div class="detail-value" id="detailStatus">-</div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer" style="text-align: center; margin-top: 20px;">
+                <button class="btn btn-primary" onclick="editEmployeeFromModal()">
+                    <i class="fas fa-edit"></i> 編集
+                </button>
+                <button class="btn btn-secondary" onclick="EmployeeSystem.closeModal('employeeModal')">
+                    閉じる
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- アラート用コンテナ -->
+    <div id="alert-container"></div>
+
+    <script src="assets/common.js"></script>
+    <script>
+        // 現在表示中の社員データ
+        let currentEmployeeData = [];
+        let filteredData = [];
+        let currentSortColumn = '';
+        let currentSortOrder = 'asc';
+        let selectedEmployeeId = '';
+
+        // ページ初期化
+        document.addEventListener('DOMContentLoaded', function() {
+            // サンプルデータを設定
+            loadEmployeeData();
+            
+            // イベントリスナーを設定
+            setupEventListeners();
+            
+            // テーブルソート機能を設定
+            setupTableSort();
+        });
+
+        // ログアウト処理
+        function logout() {
+            if (confirm('ログアウトしますか？')) {
+                EmployeeSystem.removeStorageData('employee_system_user');
+                window.location.href = '01_login.html';
+            }
+        }
+
+        // 社員データ読み込み（サンプル）
+        function loadEmployeeData() {
+            currentEmployeeData = [
+                {
+                    id: 'EMP001',
+                    name: '田中 太郎',
+                    email: 'tanaka@company.com',
+                    phone: '03-1234-5678',
+                    department: '開発部',
+                    position: '主任',
+                    joinDate: '2022-04-01',
+                    status: 'active'
+                },
+                {
+                    id: 'EMP002',
+                    name: '佐藤 花子',
+                    email: 'sato@company.com',
+                    phone: '03-2345-6789',
+                    department: '営業部',
+                    position: '係長',
+                    joinDate: '2021-10-15',
+                    status: 'active'
+                },
+                {
+                    id: 'EMP003',
+                    name: '鈴木 次郎',
+                    email: 'suzuki@company.com',
+                    phone: '03-3456-7890',
+                    department: '総務部',
+                    position: '一般',
+                    joinDate: '2023-01-20',
+                    status: 'active'
+                },
+                {
+                    id: 'EMP004',
+                    name: '高橋 美咲',
+                    email: 'takahashi@company.com',
+                    phone: '03-4567-8901',
+                    department: '人事部',
+                    position: '課長',
+                    joinDate: '2020-07-01',
+                    status: 'active'
+                },
+                {
+                    id: 'EMP005',
+                    name: '山田 健太',
+                    email: 'yamada@company.com',
+                    phone: '03-5678-9012',
+                    department: '経理部',
+                    position: '係長',
+                    joinDate: '2019-03-15',
+                    status: 'pending'
+                }
+            ];
+            
+            filteredData = [...currentEmployeeData];
+            updateTableInfo();
+        }
+
+        // イベントリスナー設定
+        function setupEventListeners() {
+            // 検索入力でリアルタイム検索
+            document.getElementById('searchName').addEventListener('input', debounce(applyFilters, 300));
+            
+            // フィルターの変更監視
+            ['filterDepartment', 'filterPosition', 'filterStatus'].forEach(id => {
+                document.getElementById(id).addEventListener('change', applyFilters);
+            });
+
+            // Enterキーで検索
+            document.getElementById('searchName').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    applyFilters();
+                }
+            });
+        }
+
+        // テーブルソート機能設定
+        function setupTableSort() {
+            document.querySelectorAll('.sortable').forEach(th => {
+                th.addEventListener('click', function() {
+                    const column = this.dataset.sort;
+                    
+                    if (currentSortColumn === column) {
+                        currentSortOrder = currentSortOrder === 'asc' ? 'desc' : 'asc';
+                    } else {
+                        currentSortColumn = column;
+                        currentSortOrder = 'asc';
+                    }
+                    
+                    sortTable(column, currentSortOrder);
+                    updateSortIndicators(this);
+                });
+            });
+        }
+
+        // テーブルソート実行
+        function sortTable(column, order) {
+            filteredData.sort((a, b) => {
+                let aValue = a[column] || '';
+                let bValue = b[column] || '';
+                
+                // 日付の場合
+                if (column === 'joinDate') {
+                    aValue = new Date(aValue);
+                    bValue = new Date(bValue);
+                }
+                
+                if (aValue < bValue) {
+                    return order === 'asc' ? -1 : 1;
+                }
+                if (aValue > bValue) {
+                    return order === 'asc' ? 1 : -1;
+                }
+                return 0;
+            });
+            
+            renderTable();
+        }
+
+        // ソートインジケーター更新
+        function updateSortIndicators(activeHeader) {
+            // 全てのヘッダーからソート状態をクリア
+            document.querySelectorAll('.sortable').forEach(th => {
+                th.classList.remove('sorted-asc', 'sorted-desc');
+            });
+            
+            // アクティブなヘッダーにソート状態を追加
+            activeHeader.classList.add(currentSortOrder === 'asc' ? 'sorted-asc' : 'sorted-desc');
+        }
+
+        // フィルター適用
+        function applyFilters() {
+            const searchName = document.getElementById('searchName').value.toLowerCase();
+            const filterDept = document.getElementById('filterDepartment').value;
+            const filterPos = document.getElementById('filterPosition').value;
+            const filterStatus = document.getElementById('filterStatus').value;
+            
+            filteredData = currentEmployeeData.filter(emp => {
+                const nameMatch = emp.name.toLowerCase().includes(searchName);
+                const deptMatch = !filterDept || emp.department === filterDept;
+                const posMatch = !filterPos || emp.position === filterPos;
+                const statusMatch = !filterStatus || emp.status === filterStatus;
+                
+                return nameMatch && deptMatch && posMatch && statusMatch;
+            });
+            
+            renderTable();
+            updateTableInfo();
+        }
+
+        // フィルタークリア
+        function clearFilters() {
+            document.getElementById('searchName').value = '';
+            document.getElementById('filterDepartment').value = '';
+            document.getElementById('filterPosition').value = '';
+            document.getElementById('filterStatus').value = '';
+            
+            filteredData = [...currentEmployeeData];
+            renderTable();
+            updateTableInfo();
+            
+            EmployeeSystem.showAlert('フィルターをクリアしました', 'info', 2000);
+        }
+
+        // テーブル情報更新
+        function updateTableInfo() {
+            document.getElementById('totalCount').textContent = currentEmployeeData.length;
+            document.getElementById('displayCount').textContent = filteredData.length;
+        }
+
+        // テーブル再描画
+        function renderTable() {
+            const tbody = document.querySelector('#employeeTable tbody');
+            tbody.innerHTML = '';
+            
+            filteredData.forEach(emp => {
+                const row = createEmployeeRow(emp);
+                tbody.appendChild(row);
+            });
+        }
+
+        // 社員行作成
+        function createEmployeeRow(emp) {
+            const row = document.createElement('tr');
+            const statusClass = emp.status === 'active' ? 'status-active' : 
+                               emp.status === 'inactive' ? 'status-inactive' : 'status-pending';
+            const statusText = emp.status === 'active' ? '在籍' : 
+                              emp.status === 'inactive' ? '退職' : '保留中';
+            
+            const deptClass = emp.department === '開発部' ? 'dev' :
+                             emp.department === '営業部' ? 'sales' :
+                             emp.department === '総務部' ? 'admin' :
+                             emp.department === '人事部' ? 'hr' : 'finance';
+            
+            row.innerHTML = `
+                <td data-label="社員ID">${emp.id}</td>
+                <td data-label="氏名">
+                    <div class="employee-info">
+                        <div class="employee-avatar">${emp.name.charAt(0)}</div>
+                        <div class="employee-details">
+                            <h4>${emp.name}</h4>
+                            <p>${emp.email}</p>
+                        </div>
+                    </div>
+                </td>
+                <td data-label="部署">
+                    <span class="dept-badge ${deptClass}">${emp.department}</span>
+                </td>
+                <td data-label="役職">${emp.position}</td>
+                <td data-label="入社日">${emp.joinDate}</td>
+                <td data-label="ステータス">
+                    <span class="status-badge ${statusClass}">${statusText}</span>
+                </td>
+                <td data-label="操作">
+                    <div class="action-buttons">
+                        <button class="action-btn view" onclick="viewEmployee('${emp.id}')">
+                            <i class="fas fa-eye"></i> 詳細
+                        </button>
+                        <button class="action-btn edit" onclick="editEmployee('${emp.id}')">
+                            <i class="fas fa-edit"></i> 編集
+                        </button>
+                        <button class="action-btn delete" onclick="deleteEmployee('${emp.id}')">
+                            <i class="fas fa-trash"></i> 削除
+                        </button>
+                    </div>
+                </td>
+            `;
+            
+            return row;
+        }
+
+        // 社員詳細表示
+        function viewEmployee(empId) {
+            const employee = currentEmployeeData.find(emp => emp.id === empId);
+            if (!employee) return;
+            
+            selectedEmployeeId = empId;
+            
+            // モーダルに情報を設定
+            document.getElementById('detailEmpId').textContent = employee.id;
+            document.getElementById('detailName').textContent = employee.name;
+            document.getElementById('detailEmail').textContent = employee.email;
+            document.getElementById('detailPhone').textContent = employee.phone;
+            document.getElementById('detailDepartment').textContent = employee.department;
+            document.getElementById('detailPosition').textContent = employee.position;
+            document.getElementById('detailJoinDate').textContent = employee.joinDate;
+            
+            const statusText = employee.status === 'active' ? '在籍' : 
+                              employee.status === 'inactive' ? '退職' : '保留中';
+            document.getElementById('detailStatus').textContent = statusText;
+            
+            EmployeeSystem.showModal('employeeModal');
+        }
+
+        // 社員編集
+        function editEmployee(empId) {
+            EmployeeSystem.showAlert(`社員ID: ${empId} の編集画面に移動します`, 'info', 2000);
+            setTimeout(() => {
+                window.location.href = `04_employee_form.html?id=${empId}`;
+            }, 2000);
+        }
+
+        // モーダルから編集
+        function editEmployeeFromModal() {
+            EmployeeSystem.closeModal('employeeModal');
+            editEmployee(selectedEmployeeId);
+        }
+
+        // 社員削除
+        function deleteEmployee(empId) {
+            const employee = currentEmployeeData.find(emp => emp.id === empId);
+            if (!employee) return;
+            
+            if (confirm(`${employee.name}さんを削除しますか？\n※この操作は取り消せません。`)) {
+                // データから削除
+                const index = currentEmployeeData.findIndex(emp => emp.id === empId);
+                if (index > -1) {
+                    currentEmployeeData.splice(index, 1);
+                    applyFilters(); // フィルターを再適用してテーブルを更新
+                    EmployeeSystem.showAlert(`${employee.name}さんを削除しました`, 'success', 3000);
+                }
+            }
+        }
+
+        // CSVエクスポート
+        function exportEmployees() {
+            EmployeeSystem.showAlert('CSVエクスポート機能を開始します', 'info', 2000);
+            setTimeout(() => {
+                window.location.href = '05_csv_import_export.html';
+            }, 2000);
+        }
+
+        // デバウンス関数
+        function debounce(func, wait) {
+            let timeout;
+            return function executedFunction(...args) {
+                const later = () => {
+                    clearTimeout(timeout);
+                    func(...args);
+                };
+                clearTimeout(timeout);
+                timeout = setTimeout(later, wait);
+            };
+        }
+    </script>
+</body>
+</html>
